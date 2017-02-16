@@ -1,0 +1,12 @@
+{
+    "version": "0.1.0",
+    "command": "C:/Users/King Pub/AppData/Local/Programs/Python/Python36-32/python.exe",
+    "args": ["app.py"],
+    "problemMatcher": {
+        "fileLocation": ["relative", "${workspaceRoot}"],
+        "pattern": {
+            "regexp": "^(.*)+s$",
+            "message": 1
+        }
+    }
+}
