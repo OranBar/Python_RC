@@ -3,5 +3,6 @@
 from client import Client
 
 client = Client('me')
-client.connect('localhost', 12000)
+answer = client.send_message('localhost', 12000, 'my message', 1)
+print answer
 
