@@ -10,6 +10,9 @@ class Client(object):
 
     name = "myname"
 
+    def __init__(self, myName):
+        self.name = myName
+
     def send_message(self, serverName, serverPort,  msg, answerExpected):
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         clientSocket.sendto(msg, (serverName, serverPort))
