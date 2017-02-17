@@ -2,6 +2,7 @@
 
 from server import *
 
-server = Server('localhost', 12000)
-server.start_server()
+if __name__ == "__main__":
+    server = Server('localhost', 12000)
+    server.start_server()
 

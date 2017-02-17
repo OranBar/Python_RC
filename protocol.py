@@ -24,5 +24,12 @@ class ProtocolPacket(object):
         self.arg2 = arg2
         self.opresult = opresult
 
+    def send_on_socket(self, socket):
+
+        # socket.send(self.cmd)
+        # socket.send(self.authenticated)
+        # socket.send(self.arg1)
+        # socket.send(self.arg2)
+        # socket.send(self.opresult)
 
 

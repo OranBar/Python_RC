@@ -1,10 +1,25 @@
 # -*- coding: utf-8 -*-
+# pylint disable=C0103
+# pylint disable=C0303
+
 """
 Created on Thu Feb 16 02:49:37 2017
 
 @author: King Pub
 """
 import socket
+from enum import Enum
+from threading import Thread
+from time import sleep
+import time
+
+class ConnectionFSM(Enum):
+    START = 0
+    CONNECTED = 1
+    LOGIN = 2
+    AUTHENTICATED = 3
+    END = 4
+
 
 class Server(object):
 
@@ -25,27 +40,34 @@ class Server(object):
         try:
             while(self.stop == False):
                 message, clientAddress = self.serverSocket.recvfrom(2048)    
+                # thread = Thread(target = self.process_message, args = (message, clientAddress))
+                # thread.start()
                 self.process_message(message, clientAddress)
         finally:
             self.serverSocket.close()
 
-    def process_message(self, msg, clientAddress):
-        modifiedMessage = msg.upper()
-        self.serverSocket.sendto(modifiedMessage, clientAddress)
-
     def stop_server(self):
         stop = True
 
+    def process_message(self, msg, clientAddress):
+        modifiedMessage = (msg[0].upper(), msg[1].upper())
+        self.serverSocket.sendto(modifiedMessage, clientAddress)
 
-# serverName = 'localhost'
-# serverPort = 12000
-# serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# serverSocket.bind(('', serverPort))
-# print('Server Ready')
-# try:
-#     while(1):
-#         message, clientAddress = serverSocket.recvfrom(2048)    
-#         modifiedMessage = message.upper()
-#         serverSocket.sendto(modifiedMessage, clientAddress)
-# finally:
-#     serverSocket.close()
+# class MessageHandler(object):
+
+#     state = ConnectionFSM.START 
+
+#     def serve_client(self, msg, state):
+#         if(state == ConnectionFSM.START):
+#         #    Authenticate(msg.arg1, msg.arg2) 
+#         elif(state == ConnectionFSM.CONNECTED):
+#             pass
+#         elif(state == ConnectionFSM.AUTHENTICATED):
+#             pass
+#         elif(state == ConnectionFSM.END):
+#             pass
+    
+
+
+    
+
