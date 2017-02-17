@@ -12,8 +12,14 @@ class Commands(IntEnum):
     NOTIFYME = 4
 
 class OpResult(IntEnum):
-    SUCCESS = 0
-    FAILED = 1
+    ### Generic Results ##
+    NONE = 0
+    SUCCESS = 1
+    TIMEOUT = 2
+    ### Login Results ##
+    INVALID_USERNAME = 3
+    INVALID_PASSWORD = 4
+    USER_NOT_AUTHENTICATED = 5
 
 class ProtocolPacket(object):
 
@@ -36,16 +42,17 @@ class ProtocolPacket(object):
         arg2b = bytes(self.arg2)
         values = (len(arg1b), len(arg2b), self.cmd, self.opresult, arg1b, arg2b)
         packed_data = struct.pack('I I I I {0}s {1}s'.format(len(arg1b), len(arg2b)), *values)
-        # packed_data = packer.pack(*values)
         return packed_data
 
     @staticmethod
     def unpack_data(packedData):
-        # sizeUnpacker = struct.Struct('B B')
         (arg1Size, arg2Size), data = struct.unpack('I I', packedData[:8]), packedData[8:]
         unpacker = struct.Struct( ('I I {0}s {1}s').format(arg1Size, arg2Size) )
         unpacked_data = unpacker.unpack(data)
         return ProtocolPacket(*unpacked_data) 
-    # unpack_data = staticmethod(unpack_data)
+
+    def __str__(self):
+        return '({0}, {1}, {2}, {3})'.format(self.cmd, self.opresult, self.arg1, self.arg2)
+
 
    

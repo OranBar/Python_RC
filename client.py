@@ -23,10 +23,9 @@ class Client(object):
         assert (self.clientSocket != None)
 
         self.clientSocket.send(msg.pack_data())
-        #chiedi a dani se esiste recv e basta
-        answer, serverAddress = self.clientSocket.recvfrom(2048)
-        answer_packet = ProtocolPacket.unpack_data(answer)
-        return answer_packet
+        answer_packet = self.clientSocket.recv(2048)
+        answer = ProtocolPacket.unpack_data(answer_packet)
+        return answer
 
     def close_connection(self):
         self.clientSocket.close()

@@ -38,7 +38,7 @@ class Server(object):
         
     def start_server(self):
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serverSocket.bind(('', self.serverPort))
+        self.serverSocket.bind((self.serverName, self.serverPort))
         self.serverSocket.listen(5)
         print('Server Ready')
         try:
@@ -67,20 +67,6 @@ class MockServer(Server):
         
         connection.send(msg.pack_data())
 
-# class MessageHandler(object):
-
-#     state = ConnectionFSM.START 
-
-#     def serve_client(self, msg, state):
-#         if(state == ConnectionFSM.START):
-#         #    Authenticate(msg.arg1, msg.arg2) 
-#         elif(state == ConnectionFSM.CONNECTED):
-#             pass
-#         elif(state == ConnectionFSM.AUTHENTICATED):
-#             pass
-#         elif(state == ConnectionFSM.END):
-#             pass
-    
 
 
     
