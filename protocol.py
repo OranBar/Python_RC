@@ -12,14 +12,15 @@ class Commands(IntEnum):
     NOTIFYME = 4
 
 class OpResult(IntEnum):
+    ### Generic Results ##
     NONE = 0
     SUCCESS = 1
     TIMEOUT = 2
-    
-class LoginResults(OpResult):
+    ### Login Results ##
     INVALID_USERNAME = 3
     INVALID_PASSWORD = 4
     USER_NOT_AUTHENTICATED = 5
+    
 
 
 class ProtocolPacket(object):

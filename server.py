@@ -4,6 +4,7 @@ Created on Thu Feb 16 02:49:37 2017
 @author: King Pub
 """
 import socket
+import copy
 from enum import Enum
 from threading import Thread
 from time import sleep
@@ -35,19 +36,20 @@ class Server(object):
         try:
             while(self.stop == False):
                 conn, addr = self.serverSocket.accept()
-                serverMinionThread = Thread(target =  self.__process_message, args = (unpacked_msg, conn))
+                serverMinionThread = Thread(target =  self.__process_connection, args = (conn,))
                 serverMinionThread.start()
                 # self.process_message(unpacked_msg, conn)
         finally:
             self.serverSocket.close()
 
+    def __process_connection(self, connection):
+        msgHandler = ServerMinion()
+        msgHandler.serve_client(connection)
+
     def stop_server(self):
         stop = True
 
-    def __process_message(self, msg, connection):
-        msgHandler = ServerMinion()
-        msgHandle.serve_client(conn)
-
+    
 class MockServer(Server):
 
     def __process_message(self, msg, connection):
@@ -59,29 +61,30 @@ class MockServer(Server):
 
 class ServerMinion(object):
 
-
     def serve_client(self, connection, state = ConnectionFSM.LOGIN):
         #Add timeout
         packed_msg = connection.recv(2048)
         msg = ProtocolPacket.unpack_data(packed_msg)
-        answer = msg.copy()
-
+        
         if(state is ConnectionFSM.LOGIN):
-            handle_login(msg)
+            self.__handle_login(connection, msg)
             
         elif(state is ConnectionFSM.AUTHENTICATED):
-            self.__handle_request(msg)
+            self.__handle_request(connection, msg)
 
 
-    def __handle_login(connection, msg):
+    def __handle_login(self, connection, msg):
+        answer = copy.copy(msg)
+        
         if(msg.cmd is not Commands.LOGIN):
             #Error: bad request: User needs to login before doing any other operation
-            answer.opresult = LoginResults.USER_NOT_AUTHENTICATED
+            answer.opresult = OpResult.USER_NOT_AUTHENTICATED
             connection.send( answer.pack_data() )
             self.serve_client(connection, ConnectionFSM.LOGIN)
         
         username, password = msg.arg1, msg.arg2
         answer.opresult = __try_login(username, password)
+
         connection.send(answer) 
         
         if answer.opresult is LoginResults.SUCCESS:
@@ -94,7 +97,7 @@ class ServerMinion(object):
         #TODO implement me
         return LoginResults.SUCCESS 
 
-    def __handle_request(self, msg):
+    def __handle_request(self, connection, msg):
         #TODO Implement me
         pass
 
