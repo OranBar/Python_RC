@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # pylint disable=C0103
 # pylint disable=C0303
+# pylint disable=E1101
+# pylint --errors-only
 
 """
 Created on Thu Feb 16 02:49:37 2017

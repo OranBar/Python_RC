@@ -15,15 +15,21 @@ def test_packing_and_unpacking():
     assert unpacked_data.arg1 == 'test'
     assert unpacked_data.arg2 == 'testa'
 
-def client_server_comunication():
+#Run the file "runmockserver.py" before running this test, or it will fail
+def test_client_server_comunication():
     serverName, serverPort = 'localhost', 12000
     
     client = Client('dummy')
     
-    answer = client.send_message(serverName, serverPort, ProtocolPacket(0,0,'Test','Testa'))
+    client.connect(serverName, serverPort)
+    answer = client.send_message( ProtocolPacket(0,0,'Test','Testa') )
 
-    assert answer.arg1 == 'Test'
-    assert answer.arg2 == 'Testa'
+    assert answer.cmd == 0
+    assert answer.opresult == 0
+    assert answer.arg1 == 'TEST'
+    assert answer.arg2 == 'TESTA'
+
+
     
 
 
