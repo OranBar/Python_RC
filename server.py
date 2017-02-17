@@ -12,6 +12,7 @@ from enum import Enum
 from threading import Thread
 from time import sleep
 import time
+from protocol import *
 
 class ConnectionFSM(Enum):
     START = 0
@@ -39,10 +40,11 @@ class Server(object):
         print('Server Ready')
         try:
             while(self.stop == False):
-                message, clientAddress = self.serverSocket.recvfrom(2048)    
+                msg, clientAddress = self.serverSocket.recvfrom(2048) 
+                unpacked_msg = ProtocolPacket.unpack_data(msg)
                 # thread = Thread(target = self.process_message, args = (message, clientAddress))
                 # thread.start()
-                self.process_message(message, clientAddress)
+                self.process_message(msg, clientAddress)
         finally:
             self.serverSocket.close()
 
@@ -50,8 +52,12 @@ class Server(object):
         stop = True
 
     def process_message(self, msg, clientAddress):
-        modifiedMessage = (msg[0].upper(), msg[1].upper())
-        self.serverSocket.sendto(modifiedMessage, clientAddress)
+        answer = ProtocolPacket(*msg)
+        
+        answer.arg1 = answer.arg1.upper()
+        answer.arg2 = answer.arg2.upper()
+        
+        self.serverSocket.sendto(answer, clientAddress)
 
 # class MessageHandler(object):
 
