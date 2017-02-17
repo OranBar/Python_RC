@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-# pylint disable=C0103
-# pylint disable=C0303
-# pylint disable=E1101
-# pylint --errors-only
-
 """
 Created on Thu Feb 16 02:49:37 2017
 
@@ -17,11 +11,8 @@ import time
 from protocol import *
 
 class ConnectionFSM(Enum):
-    START = 0
-    CONNECTED = 1
-    LOGIN = 2
-    AUTHENTICATED = 3
-    END = 4
+    LOGIN = 0
+    AUTHENTICATED = 1
 
 
 class Server(object):
@@ -39,48 +30,74 @@ class Server(object):
     def start_server(self):
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serverSocket.bind(('', self.serverPort))
-        self.serverSocket.listen(5)
+        self.serverSocket.listen(10)
         print('Server Ready')
         try:
             while(self.stop == False):
                 conn, addr = self.serverSocket.accept()
-                msg = conn.recv(2048)
-                unpacked_msg = ProtocolPacket.unpack_data(msg)
-                # thread = Thread(target = self.process_message, args = (message, clientAddress))
-                # thread.start()
-                self.process_message(unpacked_msg, conn)
+                serverMinionThread = Thread(target =  self.__process_message, args = (unpacked_msg, conn))
+                serverMinionThread.start()
+                # self.process_message(unpacked_msg, conn)
         finally:
             self.serverSocket.close()
 
     def stop_server(self):
         stop = True
 
-    def process_message(self, msg, connection):
-        pass
+    def __process_message(self, msg, connection):
+        msgHandler = ServerMinion()
+        msgHandle.serve_client(conn)
 
 class MockServer(Server):
 
-    def process_message(self, msg, connection):
+    def __process_message(self, msg, connection):
         
         msg.arg1 = msg.arg1.upper()
         msg.arg2 = msg.arg2.upper()
         
         connection.send(msg.pack_data())
 
-# class MessageHandler(object):
+class ServerMinion(object):
 
-#     state = ConnectionFSM.START 
 
-#     def serve_client(self, msg, state):
-#         if(state == ConnectionFSM.START):
-#         #    Authenticate(msg.arg1, msg.arg2) 
-#         elif(state == ConnectionFSM.CONNECTED):
-#             pass
-#         elif(state == ConnectionFSM.AUTHENTICATED):
-#             pass
-#         elif(state == ConnectionFSM.END):
-#             pass
-    
+    def serve_client(self, connection, state = ConnectionFSM.LOGIN):
+        #Add timeout
+        packed_msg = connection.recv(2048)
+        msg = ProtocolPacket.unpack_data(packed_msg)
+        answer = msg.copy()
+
+        if(state is ConnectionFSM.LOGIN):
+            handle_login(msg)
+            
+        elif(state is ConnectionFSM.AUTHENTICATED):
+            self.__handle_request(msg)
+
+
+    def __handle_login(connection, msg):
+        if(msg.cmd is not Commands.LOGIN):
+            #Error: bad request: User needs to login before doing any other operation
+            answer.opresult = LoginResults.USER_NOT_AUTHENTICATED
+            connection.send( answer.pack_data() )
+            self.serve_client(connection, ConnectionFSM.LOGIN)
+        
+        username, password = msg.arg1, msg.arg2
+        answer.opresult = __try_login(username, password)
+        connection.send(answer) 
+        
+        if answer.opresult is LoginResults.SUCCESS:
+            self.serve_client(connection, ConnectionFSM.AUTHENTICATED)
+        else:
+            self.serve_client(connection, ConnectionFSM.LOGIN)
+        
+
+    def __try_login(self, username, password):
+        #TODO implement me
+        return LoginResults.SUCCESS 
+
+    def __handle_request(self, msg):
+        #TODO Implement me
+        pass
+
 
 
     
