@@ -35,29 +35,35 @@ class Server(object):
         self.serverPort = serverPort
         
     def start_server(self):
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serverSocket.bind(('', self.serverPort))
+        self.serverSocket.listen(5)
         print('Server Ready')
         try:
             while(self.stop == False):
-                msg, clientAddress = self.serverSocket.recvfrom(2048) 
+                conn, addr = self.serverSocket.accept()
+                msg = conn.recv(2048)
                 unpacked_msg = ProtocolPacket.unpack_data(msg)
                 # thread = Thread(target = self.process_message, args = (message, clientAddress))
                 # thread.start()
-                self.process_message(msg, clientAddress)
+                self.process_message(unpacked_msg, conn)
         finally:
             self.serverSocket.close()
 
     def stop_server(self):
         stop = True
 
-    def process_message(self, msg, clientAddress):
-        answer = ProtocolPacket(*msg)
+    def process_message(self, msg, connection):
+        pass
+
+class MockServer(Server):
+
+    def process_message(self, msg, connection):
         
-        answer.arg1 = answer.arg1.upper()
-        answer.arg2 = answer.arg2.upper()
+        msg.arg1 = msg.arg1.upper()
+        msg.arg2 = msg.arg2.upper()
         
-        self.serverSocket.sendto(answer, clientAddress)
+        connection.send(msg.pack_data())
 
 # class MessageHandler(object):
 
