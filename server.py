@@ -44,14 +44,12 @@ class Server(object):
         finally:
             self.serverSocket.close()
 
-    def process_connection(self, connection):
+    def process_connection(self, conn):
         msgHandler = ServerMinion()
         print 'Starting Minion Thread'
         serverMinionThread = Thread(target =  msgHandler.serve_client, args = (conn, ConnectionFSM.LOGIN))
         serverMinionThread.start()
         
-        #msgHandler.serve_client(connection, ConnectionFSM.LOGIN)
-
     def stop_server(self):
         stop = True
 
@@ -97,7 +95,7 @@ class ServerMinion(object):
     def __handle_login(self, connection, msg):
         answer = msg
         
-        if(msg.cmd is not Commands.LOGIN):
+        if(msg.cmd != Commands.LOGIN):
             #Error: bad request: User needs to login before doing any other operation
             print 'Error: Need to login first'
             answer.opresult = OpResult.USER_NOT_AUTHENTICATED
@@ -106,13 +104,13 @@ class ServerMinion(object):
         else:
             username, password = msg.arg1, msg.arg2
             print 'Username is {0}, password is {1}'.format(username, password)
-            loginResult = __try_login(username, password)
-            print 'Login Successful: ' + loginResult
+            loginResult = self.__try_login(username, password)
+            print 'Login Successful: ' + loginResult.__str__()
             answer.opresult = loginResult
 
-            connection.send(answer) 
+            connection.send( answer.pack_data() ) 
             
-            if loginResult is LoginResults.SUCCESS:
+            if loginResult == OpResult.SUCCESS:
                 self.serve_client(connection, ConnectionFSM.AUTHENTICATED)
             else:
                 self.serve_client(connection, ConnectionFSM.LOGIN)
@@ -120,7 +118,7 @@ class ServerMinion(object):
 
     def __try_login(self, username, password):
         #TODO implement me
-        return LoginResults.SUCCESS 
+        return OpResult.SUCCESS 
 
     def __handle_request(self, connection, msg):
         #TODO Implement me

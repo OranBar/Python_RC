@@ -34,9 +34,6 @@ class ProtocolPacket(object):
         self.arg1 = arg1
         self.arg2 = arg2
 
-    def send_on_socket(self, socket):
-        socket.send( pack_data() )
-       
     def pack_data(self):
         arg1b = bytes(self.arg1)
         arg2b = bytes(self.arg2)
@@ -50,10 +47,6 @@ class ProtocolPacket(object):
         unpacker = struct.Struct( ('I I {0}s {1}s').format(arg1Size, arg2Size) )
         unpacked_data = unpacker.unpack(data)
         return ProtocolPacket(*unpacked_data) 
-
-    def __str__(self):
-        return '({0}, {1}, {2}, {3})'.format(self.cmd, self.opresult, self.arg1, self.arg2)
-
 
     def __str__(self):
         return '({0}, {1}, {2}, {3})'.format(self.cmd, self.opresult, self.arg1, self.arg2)
