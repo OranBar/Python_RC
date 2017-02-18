@@ -55,4 +55,7 @@ class ProtocolPacket(object):
         return '({0}, {1}, {2}, {3})'.format(self.cmd, self.opresult, self.arg1, self.arg2)
 
 
+    def __str__(self):
+        return '({0}, {1}, {2}, {3})'.format(self.cmd, self.opresult, self.arg1, self.arg2)
+
    

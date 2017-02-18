@@ -17,12 +17,9 @@ import time
 from protocol import *
 
 class ConnectionFSM(Enum):
-    START = 0
-    CONNECTED = 1
-    LOGIN = 2
-    AUTHENTICATED = 3
-    END = 4
-
+    LOGIN = 1
+    AUTHENTICATED = 2
+    
 
 class Server(object):
 
@@ -44,28 +41,93 @@ class Server(object):
         try:
             while(self.stop == False):
                 conn, addr = self.serverSocket.accept()
-                msg = conn.recv(2048)
-                unpacked_msg = ProtocolPacket.unpack_data(msg)
+                # serverMinionThread = Thread(target =  self.__process_connection, args = (conn,))
+                # serverMinionThread.start()
+                # self.process_message(unpacked_msg, conn)
+                self.process_connection(conn)
+
+                # msg_packed = conn.recv(2048)
+                # msg = ProtocolPacket.unpack_data(msg_packed)
+                # msg.arg1 = msg.arg1.upper()
+                # msg.arg2 = msg.arg2.upper()
+                # conn.send(msg.pack_data())
+                
                 # thread = Thread(target = self.process_message, args = (message, clientAddress))
                 # thread.start()
-                self.process_message(unpacked_msg, conn)
         finally:
             self.serverSocket.close()
+
+    def process_connection(self, connection):
+        msgHandler = ServerMinion()
+        msgHandler.serve_client(connection, ConnectionFSM.LOGIN)
 
     def stop_server(self):
         stop = True
 
-    def process_message(self, msg, connection):
-        pass
-
 class MockServer(Server):
 
-    def process_message(self, msg, connection):
+    def process_connection(self, connection):
+        packed_msg = connection.recv(2048)
+        #Temporal Fix
+        if(packed_msg == ''):
+            connection.close()
+            return
         
+        msg = ProtocolPacket.unpack_data(packed_msg)
         msg.arg1 = msg.arg1.upper()
         msg.arg2 = msg.arg2.upper()
-        
         connection.send(msg.pack_data())
+        connection.close()
+
+class ServerMinion(object):
+
+    def serve_client(self, connection, state):
+        #Add timeout
+        packed_msg = connection.recv(2048)
+        #Temporal Fix
+        if(packed_msg == ''):
+            connection.close()
+            return
+        
+        msg = ProtocolPacket.unpack_data(packed_msg)
+        
+        print 'Message Received: ' + msg
+        
+        if(state is ConnectionFSM.LOGIN):
+            self.__handle_login(connection, msg)
+            
+        elif(state is ConnectionFSM.AUTHENTICATED):
+            self.__handle_request(connection, msg)
+      
+
+    def __handle_login(self, connection, msg):
+        answer = copy.copy(msg)
+        
+        if(msg.cmd is not Commands.LOGIN):
+            #Error: bad request: User needs to login before doing any other operation
+            answer.opresult = OpResult.USER_NOT_AUTHENTICATED
+            connection.send( answer.pack_data() )
+            self.serve_client(connection, ConnectionFSM.LOGIN)
+        else:
+            username, password = msg.arg1, msg.arg2
+            loginResult = __try_login(username, password)
+            answer.opresult = loginResult
+
+            connection.send(answer) 
+            
+            if loginResult is LoginResults.SUCCESS:
+                self.serve_client(connection, ConnectionFSM.AUTHENTICATED)
+            else:
+                self.serve_client(connection, ConnectionFSM.LOGIN)
+        
+
+    def __try_login(self, username, password):
+        #TODO implement me
+        return LoginResults.SUCCESS 
+
+    def __handle_request(self, connection, msg):
+        #TODO Implement me
+        pass
 
 
 
