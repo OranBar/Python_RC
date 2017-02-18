@@ -39,15 +39,18 @@ class Server(object):
         try:
             while(self.stop == False):
                 conn, addr = self.serverSocket.accept()
-                print 'New Connection. Starting Minion Thread'
-                serverMinionThread = Thread(target =  self.process_connection, args = (conn,))
-                serverMinionThread.start()
+                print 'New Client Connected'
+                self.process_connection(conn)
         finally:
             self.serverSocket.close()
 
     def process_connection(self, connection):
         msgHandler = ServerMinion()
-        msgHandler.serve_client(connection, ConnectionFSM.LOGIN)
+        print 'Starting Minion Thread'
+        serverMinionThread = Thread(target =  msgHandler.serve_client, args = (conn, ConnectionFSM.LOGIN))
+        serverMinionThread.start()
+        
+        #msgHandler.serve_client(connection, ConnectionFSM.LOGIN)
 
     def stop_server(self):
         stop = True
