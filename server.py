@@ -121,6 +121,24 @@ class ServerMinion(object):
 
     def __handle_request(self, connection, msg):
         #TODO Implement me
+        cmd = msg.cmd
+         if(state is ConnectionFSM.LOGIN):
+            if(cmd == Commands.LOGIN):
+                self.__handle_login(connection, msg)
+
+        if(state is ConnectionFSM.AUTHENTICATED):
+            if(cmd == Commands.LOGIN):
+                msg.opresult = OpResult.ALREADY_AUTHENTICATED
+                connection.send( msg.pack_data() )
+            elif(cmd == Commands.REGISTER):
+                pass
+            elif(cmd == Commands.SELL):
+                pass
+            elif(cmd == Commands.OFFER):
+                pass
+            elif(cmd == Commands.NOTIFYME):
+                pass
+           
         pass
 
 

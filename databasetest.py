@@ -5,7 +5,7 @@ def test_check_credentials():
     db = Database()
     assert db.check_credentials('user', 'pass') == OpResult.SUCCESS
 
-def test_find_product():
+def test_products_ops():
     db = Database()
     product = ('cat', 'pen')
     db.add_product(product)

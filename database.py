@@ -35,11 +35,11 @@ class Database(object):
     def find_products(self, productName):
         return filter(lambda p: p[0]==productName, self.products)
 
+    def list_category(self, categoryName):
+        return filter(lambda p: p[0]==categoryName, self.products)
+
     def list_categories(self):
         return map(lambda p: p[0], self.products)
 
-    def list_categories(self):
-        return self.products
-
     def save(self):
-        pickle.dump(self)
+        pickle.dump(self, open( "db.p", "wb" ))
