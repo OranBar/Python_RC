@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint disable=C0103
-# pylint disable=C0303
-# pylint disable=E1101
-# pylint --errors-only
-
 """
 Created on Thu Feb 16 02:49:37 2017
 
@@ -33,28 +28,20 @@ class Server(object):
     def __init__(self, serverName, serverPort):
         self.serverName = serverName
         self.serverPort = serverPort
+
+        print 'Server Initialized: (Name {0}, Port {1})'.format( self.serverName, self.serverPort)
         
     def start_server(self):
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serverSocket.bind((self.serverName, self.serverPort))
         self.serverSocket.listen(5)
-        print('Server Ready')
+        print('Server Listening')
         try:
             while(self.stop == False):
                 conn, addr = self.serverSocket.accept()
-                # self.process_message(unpacked_msg, conn)
-                # self.process_connection(conn)
+                print 'New Connection. Starting Minion Thread'
                 serverMinionThread = Thread(target =  self.process_connection, args = (conn,))
                 serverMinionThread.start()
-
-                # msg_packed = conn.recv(2048)
-                # msg = ProtocolPacket.unpack_data(msg_packed)
-                # msg.arg1 = msg.arg1.upper()
-                # msg.arg2 = msg.arg2.upper()
-                # conn.send(msg.pack_data())
-                
-                # thread = Thread(target = self.process_message, args = (message, clientAddress))
-                # thread.start()
         finally:
             self.serverSocket.close()
 
@@ -83,11 +70,14 @@ class MockServer(Server):
 class ServerMinion(object):
 
     def serve_client(self, connection, state):
+        print '\nServe_Client: State is ' + state.__str__()
+
         #Add timeout
         packed_msg = connection.recv(2048)
         #Temporal Fix
         if(packed_msg == ''):
             connection.close()
+            print 'Detected closed socket. Closing Connection'
             return
         
         msg = ProtocolPacket.unpack_data(packed_msg)
@@ -106,12 +96,15 @@ class ServerMinion(object):
         
         if(msg.cmd is not Commands.LOGIN):
             #Error: bad request: User needs to login before doing any other operation
+            print 'Error: Need to login first'
             answer.opresult = OpResult.USER_NOT_AUTHENTICATED
             connection.send( answer.pack_data() )
             self.serve_client(connection, ConnectionFSM.LOGIN)
         else:
             username, password = msg.arg1, msg.arg2
+            print 'Username is {0}, password is {1}'.format(username, password)
             loginResult = __try_login(username, password)
+            print 'Login Successful: ' + loginResult
             answer.opresult = loginResult
 
             connection.send(answer) 
