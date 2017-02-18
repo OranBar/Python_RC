@@ -15,11 +15,13 @@ from threading import Thread
 from time import sleep
 import time
 from protocol import *
-from copy import *
 
 class ConnectionFSM(Enum):
-    LOGIN = 1
-    AUTHENTICATED = 2
+    START = 0
+    CONNECTED = 1
+    LOGIN = 2
+    AUTHENTICATED = 3
+    END = 4
 
 
 class Server(object):
@@ -37,49 +39,74 @@ class Server(object):
     def start_server(self):
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serverSocket.bind((self.serverName, self.serverPort))
+<<<<<<< Updated upstream
         self.serverSocket.listen(5)
+=======
+        self.serverSocket.listen(10)
+>>>>>>> Stashed changes
         print('Server Ready')
         try:
             while(self.stop == False):
                 conn, addr = self.serverSocket.accept()
-                # self.process_message(unpacked_msg, conn)
-                # self.process_connection(conn)
-                serverMinionThread = Thread(target =  self.process_connection, args = (conn,))
-                serverMinionThread.start()
-
-                # msg_packed = conn.recv(2048)
-                # msg = ProtocolPacket.unpack_data(msg_packed)
-                # msg.arg1 = msg.arg1.upper()
-                # msg.arg2 = msg.arg2.upper()
-                # conn.send(msg.pack_data())
-                
+<<<<<<< Updated upstream
+                msg = conn.recv(2048)
+                unpacked_msg = ProtocolPacket.unpack_data(msg)
                 # thread = Thread(target = self.process_message, args = (message, clientAddress))
                 # thread.start()
+                self.process_message(unpacked_msg, conn)
         finally:
             self.serverSocket.close()
 
-    def process_connection(self, connection):
+=======
+                print 'Connection address:', addr
+                data = conn.recv(BUFFER_SIZE)
+                if not data: break
+                print "received data:", data
+                conn.send(data)  # echo
+
+                # print 'start thread'
+                # serverMinionThread = Thread(target =  self.__process_connection, args = (conn,))
+                # serverMinionThread.start()
+
+
+                # self.process_message(unpacked_msg, conn)
+        finally:
+            self.serverSocket.close()
+
+    def __process_connection(self, connection):
         msgHandler = ServerMinion()
         msgHandler.serve_client(connection, ConnectionFSM.LOGIN)
 
+>>>>>>> Stashed changes
     def stop_server(self):
         stop = True
 
+    def process_message(self, msg, connection):
+        pass
+
 class MockServer(Server):
 
-    def process_connection(self, connection):
+<<<<<<< Updated upstream
+    def process_message(self, msg, connection):
+=======
+    def __process_connection(self, connection):
+        print 'mockserver processing connection'
         packed_msg = connection.recv(2048)
         #Temporal Fix
         if(packed_msg == ''):
             connection.close()
             return
+>>>>>>> Stashed changes
         
         msg = ProtocolPacket.unpack_data(packed_msg)
+
         msg.arg1 = msg.arg1.upper()
         msg.arg2 = msg.arg2.upper()
+        
         connection.send(msg.pack_data())
-        connection.close()
 
+<<<<<<< Updated upstream
+=======
 class ServerMinion(object):
 
     def serve_client(self, connection, state):
@@ -92,7 +119,7 @@ class ServerMinion(object):
         
         msg = ProtocolPacket.unpack_data(packed_msg)
         
-        print 'Message Received: ' + msg.__str__()
+        print 'Message Received: ' + msg
         
         if(state is ConnectionFSM.LOGIN):
             self.__handle_login(connection, msg)
@@ -102,7 +129,7 @@ class ServerMinion(object):
       
 
     def __handle_login(self, connection, msg):
-        answer = msg
+        answer = copy.copy(msg)
         
         if(msg.cmd is not Commands.LOGIN):
             #Error: bad request: User needs to login before doing any other operation
@@ -130,6 +157,7 @@ class ServerMinion(object):
         #TODO Implement me
         pass
 
+>>>>>>> Stashed changes
 
 
     
