@@ -119,15 +119,6 @@ class ServerMinion(object):
                 self.serve_client(connection, ConnectionFSM.LOGIN)
         
 
-    # def __try_login(self, username, password):
-    #     #TODO dummy implementation
-    #     if user != 'user'
-    #         return OpResult.INVALID_USERNAME
-    #     elif password != 'password'
-    #         return OpResult.INVALID_PASSWORD
-    #     else:
-    #         return OpResult.SUCCESS
-
     def __handle_request(self, connection, msg):
         #TODO Implement me
         pass

@@ -16,10 +16,17 @@ class OpResult(IntEnum):
     NONE = 0
     SUCCESS = 1
     TIMEOUT = 2
+    ## Database Results ## 
     ### Login Results ##
     INVALID_USERNAME = 3
     INVALID_PASSWORD = 4
     USER_NOT_AUTHENTICATED = 5
+    ### Product Results ##
+    PRODUCT_ALREADY_EXISTS = 6
+    CATEGORY_NOT_FOUND = 7
+    PRODUCT_NOT_FOUND = 8
+    
+
 
 class ProtocolPacket(object):
 
