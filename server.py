@@ -11,6 +11,7 @@ from time import sleep
 import time
 from protocol import *
 from copy import *
+from database import *
 
 class ConnectionFSM(Enum):
     LOGIN = 1
@@ -104,7 +105,9 @@ class ServerMinion(object):
         else:
             username, password = msg.arg1, msg.arg2
             print 'Username is {0}, password is {1}'.format(username, password)
-            loginResult = self.__try_login(username, password)
+            database = Database()
+            loginResult = database.check_credentials(username, password)
+            # loginResult = self.__try_login(username, password)
             print 'Login Successful: ' + loginResult.__str__()
             answer.opresult = loginResult
 
@@ -116,9 +119,14 @@ class ServerMinion(object):
                 self.serve_client(connection, ConnectionFSM.LOGIN)
         
 
-    def __try_login(self, username, password):
-        #TODO implement me
-        return OpResult.SUCCESS 
+    # def __try_login(self, username, password):
+    #     #TODO dummy implementation
+    #     if user != 'user'
+    #         return OpResult.INVALID_USERNAME
+    #     elif password != 'password'
+    #         return OpResult.INVALID_PASSWORD
+    #     else:
+    #         return OpResult.SUCCESS
 
     def __handle_request(self, connection, msg):
         #TODO Implement me
