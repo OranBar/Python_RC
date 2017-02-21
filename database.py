@@ -9,7 +9,7 @@ class Database(object):
     categories = ['category1']
     #products = [('product1', 'category1')]
     
-    offers = { ('product1', 'category1'):10 }
+    offers = { ('product1', 'category1') : 10.00 }
 
     def register_new_user(self, username, password):
         userToPass[username] = password
@@ -49,17 +49,18 @@ class Database(object):
         if not self.is_valid(product[1]):
             return OpResult.INVALID_CATEGORY_NAME
 
-        if (product in self.offers.keys):
+        # if (product in self.offers.keys):
+        if (product in self.offers):
             return OpResult.PRODUCT_ALREADY_EXISTS
         
-        self.products.append(product)
+        self.offers[product] = startPrice
         return OpResult.SUCCESS
 
     def product_exists(self, product):
         if not self.is_valid(product[0]):
             return OpResult.INVALID_PRODUCT_NAME
 
-        if product in self.products:
+        if product in self.offers:
             return OpResult.SUCCESS
         else: 
             return OpResult.PRODUCT_NOT_FOUND
@@ -68,7 +69,7 @@ class Database(object):
         if not self.is_valid(productName):
             return OpResult.INVALID_PRODUCT_NAME
 
-        return (OpResult.SUCCESS, filter(lambda p: p[0]==productName, self.offers.keys))
+        return (OpResult.SUCCESS, filter(lambda p: p[0]==productName, self.offers))
 
     def list_products_in_category(self, categoryName):
         if not self.is_valid(productName):
@@ -81,7 +82,7 @@ class Database(object):
 
     def make_offer(self, product, price):
         #TODO
-        if (*product, price) in self.offers:
+        if (product) in self.offers:
             self.products
 
 

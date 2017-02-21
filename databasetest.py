@@ -8,10 +8,10 @@ def test_check_credentials():
 def test_products_ops():
     db = Database()
     product = ('cat', 'pen')
-    db.add_product(product)
+    db.add_product(product, 10.00)
     assert db.product_exists(('cat', 'pen')) == OpResult.SUCCESS
-    assert db.find_products('cat')[0][0] == 'cat'
-    assert db.find_products('cat')[0][1] == 'pen'
+    assert db.find_products('cat')[1] == 'cat'
+    assert db.find_products('cat')[1][1] == 'pen'
 
     product2 = ('no', 'yaw')
     assert db.product_exists(('no', 'yaw')) == OpResult.PRODUCT_NOT_FOUND

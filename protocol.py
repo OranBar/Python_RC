@@ -1,6 +1,6 @@
 # pylint: disable=C0111
 
-from enum import IntEnum
+from enum import *
 import struct
 import socket
 
@@ -11,7 +11,8 @@ class Commands(IntEnum):
     SELL = 2
     OFFER = 3
     NOTIFYME = 4
-    
+    CLOSE_CONNECTION = 5
+
 @unique
 class OpResult(IntEnum):
     ### Generic Results ##
@@ -30,7 +31,7 @@ class OpResult(IntEnum):
     PRODUCT_ALREADY_EXISTS = 9
     CATEGORY_ALREADY_EXISTS = 10
     CATEGORY_NOT_FOUND = 11
-    PRODUCT_NOT_FOUND = 11
+    PRODUCT_NOT_FOUND = 12
     
 
 

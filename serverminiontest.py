@@ -17,17 +17,19 @@ def test_authentication():
     assert answer.cmd != Commands.LOGIN
     assert answer.opresult == OpResult.USER_NOT_AUTHENTICATED
     
-    answer = client.send_message( ProtocolPacket(Commands.LOGIN,0,'pazzi','gabbiani') )
+    answer = client.send_message( ProtocolPacket(Commands.LOGIN, 0,'pazzi','gabbiani') )
     
     assert answer.cmd == Commands.LOGIN
     assert answer.opresult == OpResult.INVALID_USERNAME
 
-    answer = client.send_message( ProtocolPacket(Commands.LOGIN,0,'user','gabbiani') )
+    answer = client.send_message( ProtocolPacket(Commands.LOGIN, 0,'user','gabbiani') )
     
     assert answer.cmd == Commands.LOGIN
     assert answer.opresult == OpResult.INVALID_PASSWORD
 
-    answer = client.send_message( ProtocolPacket(Commands.LOGIN,0, 'user','pass') )
+    answer = client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user','pass') )
 
     assert answer.cmd == Commands.LOGIN
     assert answer.opresult == OpResult.SUCCESS
+
+    client.close_connection()

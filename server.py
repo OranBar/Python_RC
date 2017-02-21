@@ -51,7 +51,7 @@ class Server(object):
     def process_connection(self, conn):
         msgHandler = ServerMinion()
         print 'Starting Minion Thread'
-        serverMinionThread = Thread(target =  msgHandler.serve_client, args = (database, conn, ConnectionFSM.LOGIN))
+        serverMinionThread = Thread(target =  msgHandler.serve_client, args = (self.database, conn, ConnectionFSM.LOGIN))
         serverMinionThread.start()
         
     def stop_server(self):
@@ -79,10 +79,10 @@ class ServerMinion(object):
 
         #Add timeout
         packed_msg = connection.recv(2048)
-        #Temporal Fix
+        
         if(packed_msg == ''):
             connection.close()
-            print 'Detected closed socket. Closing Connection'
+            print 'WARNING: Detected closed socket. Please close the connection using the Close_Connection command'
             return
         
         msg = ProtocolPacket.unpack_data(packed_msg)
@@ -101,6 +101,14 @@ class ServerMinion(object):
     def __handle_request(self, database, connection, msg, state):
         #TODO Implement me
         cmd = msg.cmd
+
+        if( cmd == Commands.CLOSE_CONNECTION):
+            msg.opresult = OpResult.SUCCESS
+            connection.send( msg.pack_data() )
+            print 'Server: Closing Connection'
+            connection.close()
+            return
+
         if(state is ConnectionFSM.LOGIN):
             self.__handle_login(database, connection, msg)
 
@@ -132,7 +140,7 @@ class ServerMinion(object):
             print 'Error: Need to login first'
             answer.opresult = OpResult.USER_NOT_AUTHENTICATED
             connection.send( answer.pack_data() )
-            self.serve_client(connection, ConnectionFSM.LOGIN)
+            self.serve_client(database, connection, ConnectionFSM.LOGIN)
         else:
             username, password = msg.arg1, msg.arg2
             print 'Username is {0}, password is {1}'.format(username, password)
@@ -144,14 +152,7 @@ class ServerMinion(object):
             connection.send( answer.pack_data() ) 
             
             if loginResult == OpResult.SUCCESS:
-                self.serve_client(connection, ConnectionFSM.AUTHENTICATED)
+                self.serve_client(database, connection, ConnectionFSM.AUTHENTICATED)
             else:
-                self.serve_client(connection, ConnectionFSM.LOGIN)
+                self.serve_client(database, connection, ConnectionFSM.LOGIN)
         
-
-    
-
-
-
-    
-
