@@ -44,9 +44,9 @@ class Database(object):
 
     # Add minimum price
     def add_product(self, product, startPrice):
-        if not self.is_valid(product[0]):
+        if not self.is_valid(product.name):
             return OpResult.INVALID_PRODUCT_NAME
-        if not self.is_valid(product[1]):
+        if not self.is_valid(product.category):
             return OpResult.INVALID_CATEGORY_NAME
 
         # if (product in self.offers.keys):

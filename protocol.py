@@ -3,6 +3,9 @@
 from enum import *
 import struct
 import socket
+import collections
+
+Product = collections.namedtuple('Product', 'name category')
 
 @unique
 class Commands(IntEnum):
@@ -19,7 +22,7 @@ class OpResult(IntEnum):
     NONE = 0
     SUCCESS = 1
     TIMEOUT = 2
-    ## Database Results ## 
+    # Database Results # 
     ### Login Results ##
     INVALID_USERNAME = 3
     INVALID_PASSWORD = 4
@@ -32,6 +35,8 @@ class OpResult(IntEnum):
     CATEGORY_ALREADY_EXISTS = 10
     CATEGORY_NOT_FOUND = 11
     PRODUCT_NOT_FOUND = 12
+
+
     
 
 
@@ -43,7 +48,6 @@ class ProtocolPacket(object):
     arg2 = 0
     price = 0
 
-    ## Price is only used for Offers. 
     def __init__(self, cmd, opresult, arg1, arg2, price=0):
         self.cmd = cmd
         self.opresult = opresult

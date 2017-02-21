@@ -28,6 +28,8 @@ class Client(object):
         return answer
 
     def close_connection(self):
+        assert (self.clientSocket != None)
+
         closeMsg = ProtocolPacket(Commands.CLOSE_CONNECTION, 0, '', '')
         answer = self.send_message(closeMsg)
         if answer.opresult == OpResult.SUCCESS:

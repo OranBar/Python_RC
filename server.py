@@ -91,13 +91,7 @@ class ServerMinion(object):
         
         self.__handle_request(database, connection, msg, state)
 
-        # if(state is ConnectionFSM.LOGIN):
-        #     self.__handle_login(connection, msg)
-            
-        # elif(state is ConnectionFSM.AUTHENTICATED):
-        #     self.__handle_request(connection, msg, state)
-      
-
+     
     def __handle_request(self, database, connection, msg, state):
         #TODO Implement me
         cmd = msg.cmd
