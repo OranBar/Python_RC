@@ -20,6 +20,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(unpacked_data.arg1, 'test')
         self.assertEqual(unpacked_data.arg2, 'testa')
 
+
     def test_register_new_user(self):
         db = DatabaseAPI()
 
@@ -29,17 +30,6 @@ class Tests(unittest.TestCase):
         self.assertEqual (db.register_new_user('user', 'pass'), OpResult.SUCCESS)
         self.assertEqual (db.register_new_user('user', 'pass'), OpResult.USER_ALREADY_EXISTS)
 
-        # serverName, serverPort = 'localhost', 12000
-        # client = Client()
-        # client.connect(serverName, serverPort)
-
-        # answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, 'user','pass') )
-        # self.assertEqual (answer.opresult, OpResult.SUCCESS)
-        
-        # answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, 'user','pass') )
-        # self.assertEqual (answer.opresult, OpResult.USER_ALREADY_EXISTS)
-
-        # client.close_connection()
     
     def test_check_credentials(self):
         serverName, serverPort = 'localhost', 12000
@@ -63,14 +53,15 @@ class Tests(unittest.TestCase):
 
         client.close_connection()
      
-    def test_register_new_categories(self):
-        db = Database()
 
+    def test_register_new_categories(self):
         serverName, serverPort = 'localhost', 12000
         client = Client()
         client.connect(serverName, serverPort)
-        print 'connected'
         
+        client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
+
+
         answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal'))
         self.assertEqual (answer.opresult, OpResult.SUCCESS)
         print '1'
