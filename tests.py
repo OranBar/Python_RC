@@ -61,36 +61,41 @@ class Tests(unittest.TestCase):
         
         client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
 
-
-        answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal'))
+        answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'apple'))
         self.assertEqual (answer.opresult, OpResult.SUCCESS)
-        print '1'
 
-        answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal'))
+        answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'apple'))
         self.assertEqual (answer.opresult, OpResult.CATEGORY_ALREADY_EXISTS)
-        print '2'
 
-        answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'petanimals'))
+        answer = client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'banana'))
         self.assertEqual (answer.opresult, OpResult.SUCCESS)
-        print '3'
 
         client.close_connection()
 
 
     def test_add_product(self):
-        db = Database()
-        db.register_new_category('animal')
-        db.register_new_category('animal')
-        db.register_new_category('petanimals')
-        product1 = Product('cat', 'animal')
-        product2 = Product('cat', 'petanimals')
-        product2 = Product('cat', 'blackhole')
-
+        serverName, serverPort = 'localhost', 12000
+        client = Client()
+        client.connect(serverName, serverPort)
         
-        self.assertEqual (db.add_product(product1, 10.00), OpResult.SUCCESS)
-        self.assertEqual (db.add_product(product2, 15.00), OpResult.SUCCESS)
-        self.assertEqual (db.add_product(product2, 15.00), OpResult.PRODUCT_ALREADY_EXISTS)
-        self.assertEqual (db.add_product(product3, 15.00), OpResult.CATEGORY_NOT_FOUND)
+        client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
+
+        client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal')) 
+        client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'petanimals'))
+        
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'animal', 10.00))
+        self.assertEqual (answer.opresult, OpResult.SUCCESS)
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'petanimals', 15.00))
+        self.assertEqual (answer.opresult, OpResult.SUCCESS)
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'petanimals', 15.00))
+        self.assertEqual (answer.opresult, OpResult.PRODUCT_ALREADY_EXISTS)
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'blackhole', 15.00))
+        self.assertEqual (answer.opresult, OpResult.CATEGORY_NOT_FOUND)
+
    
     def test_product_exists(self):
         db = Database()

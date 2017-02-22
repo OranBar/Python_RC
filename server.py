@@ -102,7 +102,7 @@ class ServerMinion(object):
                 msg.opresult = database.register_new_category(msg.arg2)
                 
             elif(cmd == Commands.SELL):
-                msg.opresult = database.add_product((msg.arg1, msg.arg2))
+                msg.opresult = database.add_product(Product(msg.arg1, msg.arg2), msg.price)
                 
             elif(cmd == Commands.OFFER):
                 pass
