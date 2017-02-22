@@ -1,5 +1,3 @@
-# pylint: disable=C0103
-
 from server import *
 
 if __name__ == "__main__":

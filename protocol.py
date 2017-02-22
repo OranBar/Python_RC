@@ -1,5 +1,3 @@
-# pylint: disable=C0111
-
 from enum import *
 import struct
 import socket
@@ -23,21 +21,23 @@ class OpResult(IntEnum):
     SUCCESS = 1
     TIMEOUT = 2
     # Database Results # 
+    ### Registration Results ###
+    USER_ALREADY_EXISTS = 3
     ### Login Results ##
-    INVALID_USERNAME = 3
-    INVALID_PASSWORD = 4
-    USER_NOT_AUTHENTICATED = 5
-    ALREADY_AUTHENTICATED = 6
+    INVALID_USERNAME = 4
+    INVALID_PASSWORD = 5
+    USER_NOT_FOUND = 6
+    INCORRECT_PASSWORD = 7
+    USER_NOT_AUTHENTICATED = 8
+    ALREADY_AUTHENTICATED = 9
     ### Product Results ##
-    INVALID_PRODUCT_NAME = 7
-    INVALID_CATEGORY_NAME = 8
-    PRODUCT_ALREADY_EXISTS = 9
-    CATEGORY_ALREADY_EXISTS = 10
-    CATEGORY_NOT_FOUND = 11
-    PRODUCT_NOT_FOUND = 12
-
-
-    
+    INVALID_PRODUCT_NAME = 10
+    INVALID_CATEGORY_NAME = 11
+    PRODUCT_ALREADY_EXISTS = 12
+    CATEGORY_ALREADY_EXISTS = 13
+    CATEGORY_NOT_FOUND = 14
+    PRODUCT_NOT_FOUND = 15
+    BID_TOO_LOW = 16
 
 
 class ProtocolPacket(object):
@@ -70,6 +70,6 @@ class ProtocolPacket(object):
         return ProtocolPacket(*unpacked_data) 
 
     def __str__(self):
-        return '({0}, {1}, {2}, {3}, {4})'.format(self.cmd, self.opresult, self.arg1, self.arg2, self.price)
+        return '({0}, {1}, {2}, {3}, {4})'.format(Commands(self.cmd).__str__(), OpResult(self.opresult).__str__(), self.arg1, self.arg2, self.price)
 
    

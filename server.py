@@ -123,7 +123,11 @@ class ServerMinion(object):
                 pass
 
             elif(cmd == Commands.NOTIFYME):
-                pass        
+                pass 
+            
+            print 'Result: ' + OpResult(msg.opresult).__str__()
+            self.serve_client(database,connection, state)
+               
 
 
     def __handle_login(self, database, connection, msg):
@@ -133,14 +137,14 @@ class ServerMinion(object):
             #Error: bad request: User needs to login before doing any other operation
             print 'Error: Need to login first'
             answer.opresult = OpResult.USER_NOT_AUTHENTICATED
+            print 'Login Result: ' + OpResult.USER_NOT_AUTHENTICATED.__str__()
             connection.send( answer.pack_data() )
             self.serve_client(database, connection, ConnectionFSM.LOGIN)
         else:
             username, password = msg.arg1, msg.arg2
             print 'Username is {0}, password is {1}'.format(username, password)
             loginResult = database.check_credentials(username, password)
-            # loginResult = self.__try_login(username, password)
-            print 'Login Successful: ' + loginResult.__str__()
+            print 'Login Result: ' + OpResult(loginResult).__str__()
             answer.opresult = loginResult
 
             connection.send( answer.pack_data() ) 

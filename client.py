@@ -31,8 +31,9 @@ class Client(object):
         assert (self.clientSocket != None)
 
         closeMsg = ProtocolPacket(Commands.CLOSE_CONNECTION, 0, '', '')
-        answer = self.send_message(closeMsg)
+        answer = self.send_message( closeMsg )
         if answer.opresult == OpResult.SUCCESS:
+            print "Client: Connection closed"
             self.clientSocket.close()
         else:
             print 'Error closing the connection'
