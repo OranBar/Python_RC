@@ -9,11 +9,7 @@ from protocol import *
 
 class Client(object):
 
-    name = "myname"
     clientSocket = None
-
-    def __init__(self, myName):
-        self.name = myName
 
     def connect(self, serverName, serverPort):
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,7 +29,7 @@ class Client(object):
         closeMsg = ProtocolPacket(Commands.CLOSE_CONNECTION, 0, '', '')
         answer = self.send_message( closeMsg )
         if answer.opresult == OpResult.SUCCESS:
-            print "Client: Connection closed"
+            # print "Client: Connection closed"
             self.clientSocket.close()
         else:
             print 'Error closing the connection'

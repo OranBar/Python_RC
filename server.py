@@ -31,7 +31,7 @@ class Server(object):
     def __init__(self, serverName, serverPort):
         self.serverName = serverName
         self.serverPort = serverPort
-        self.database = Database()
+        self.database = DatabaseAPI()
 
         print 'Server Initialized: (Name {0}, Port {1})'.format( self.serverName, self.serverPort)
         
@@ -41,7 +41,7 @@ class Server(object):
         self.serverSocket.listen(5)
         print('Server Listening')
         try:
-            while(self.stop == False):
+            while(True):
                 conn, addr = self.serverSocket.accept()
                 print 'New Client Connected'
                 self.process_connection(conn)
@@ -53,24 +53,13 @@ class Server(object):
         print 'Starting Minion Thread'
         serverMinionThread = Thread(target =  msgHandler.serve_client, args = (self.database, conn, ConnectionFSM.LOGIN))
         serverMinionThread.start()
-        
-    def stop_server(self):
-        stop = True
+    
 
 class MockServer(Server):
 
-    def process_connection(self, connection):
-        packed_msg = connection.recv(2048)
-        #Temporal Fix
-        if(packed_msg == ''):
-            connection.close()
-            return
-        
-        msg = ProtocolPacket.unpack_data(packed_msg)
-        msg.arg1 = msg.arg1.upper()
-        msg.arg2 = msg.arg2.upper()
-        connection.send(msg.pack_data())
-        connection.close()
+    def __init__(self, serverName, serverPort):
+        Server.__init__(self, serverName, serverPort)
+        self.database.register_new_user('user', 'pass')       
 
 class ServerMinion(object):
 
@@ -105,27 +94,24 @@ class ServerMinion(object):
 
         if(state is ConnectionFSM.LOGIN):
             self.__handle_login(database, connection, msg)
-
-        if(state is ConnectionFSM.AUTHENTICATED):
+        elif(state is ConnectionFSM.AUTHENTICATED):
             if(cmd == Commands.LOGIN):
                 msg.opresult = OpResult.ALREADY_AUTHENTICATED
-                connection.send( msg.pack_data() )
-
+                
             elif(cmd == Commands.REGISTER):
                 msg.opresult = database.register_new_category(msg.arg2)
-                connection.send ( msg.pack_data() )
-
+                
             elif(cmd == Commands.SELL):
                 msg.opresult = database.add_product((msg.arg1, msg.arg2))
-                connection.send ( msg.pack_data() )
-
+                
             elif(cmd == Commands.OFFER):
                 pass
 
             elif(cmd == Commands.NOTIFYME):
-                pass 
-            
+                pass
+                
             print 'Result: ' + OpResult(msg.opresult).__str__()
+            connection.send ( msg.pack_data() )
             self.serve_client(database,connection, state)
                
 

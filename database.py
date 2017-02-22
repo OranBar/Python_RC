@@ -2,23 +2,23 @@ from protocol import *
 import pickle
 
 
-class Database(object):
+class DatabaseAPI(object):
 
-    userToPass = { 'user' : 'pass' }
-    categories = ['category1']
-    offers = { ('product1', 'category1') : 10.00 }
+    userToPass = {}
+    categories = []
+    offers = {}
 
-    def register_new_user(self, username, password):
-        if not self.is_valid_username(username):
-            return OpResult.INVALID_USERNAME
-        if not self.is_valid_password(password):
-            return OpResult.INVALID_PASSWORD
-        if username in self.userToPass:
-            return OpResult.USER_ALREADY_EXISTS
+    # This example shows in what form the database will store items
+    # userToPass = { 'user' : 'pass' }
+    # categories = ['category1']
+    # offers = { ('product1', 'category1') : (10.00, 'user') }
 
-        userToPass[username] = password
-        return OpResult.SUCCESS
-    
+    def __init__(self):
+        self.userToPass = {}
+        self.categories = []
+        self.offers = {} 
+
+
     def is_valid_username(self, str):
         return self.is_valid(str)
 
@@ -34,6 +34,17 @@ class Database(object):
     def is_valid(self, str):
         #Remove all spaces, then check length >=3
         return len(str.replace(" ", "")) >= 3
+
+    def register_new_user(self, username, password):
+        if not self.is_valid_username(username):
+            return OpResult.INVALID_USERNAME
+        if not self.is_valid_password(password):
+            return OpResult.INVALID_PASSWORD
+        if username in self.userToPass:
+            return OpResult.USER_ALREADY_EXISTS
+
+        self.userToPass[username] = password
+        return OpResult.SUCCESS
 
     def check_credentials(self, username, password):
         if not self.is_valid_username(username):
@@ -66,6 +77,8 @@ class Database(object):
         if not self.is_valid_category(product.category):
             return OpResult.INVALID_CATEGORY_NAME
 
+        if product.category not in categories:
+            return OpResult.CATEGORY_NOT_FOUND
         # if (product in self.offers.keys):
         if (product in self.offers):
             return OpResult.PRODUCT_ALREADY_EXISTS
