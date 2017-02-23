@@ -108,7 +108,7 @@ class Tests(unittest.TestCase):
 
 
     def test_find_products(self):
-        db = Database()
+        db = DatabaseAPI()
         product1 = Product('cat', 'animal')
         product2 = Product('cat', 'petanimals')
         db.register_new_category('animal')
@@ -117,12 +117,12 @@ class Tests(unittest.TestCase):
         db.add_product(product2, 15.00)
 
         self.assertEqual (db.find_products('cat')[1][0].name, 'cat')
-        self.assertEqual (db.find_products('cat')[1][0].category, 'petanimals')
+        self.assertEqual (db.find_products('cat')[1][0].category, 'animal')
         self.assertEqual (db.find_products('cat')[1][1].name, 'cat')
         self.assertEqual (db.find_products('cat')[1][1].category, 'petanimals')
 
-        self.assertEqual (db.find_products( Product('no', 'yaw') )[0], OpResult.PRODUCT_NOT_FOUND )
-        self.assertFalse (db.find_products( Product('no', 'yaw') )[1])
+        self.assertEqual (db.find_products( 'nope' )[0], OpResult.PRODUCT_NOT_FOUND )
+        self.assertFalse (db.find_products( 'nope' )[1])
     
     def test_category_list(self):
         db = DatabaseAPI()
