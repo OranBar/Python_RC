@@ -64,11 +64,6 @@ class DatabaseAPI(object):
         if not self.is_valid_category(categoryName):
             return OpResult.INVALID_CATEGORY_NAME
 
-        print 'start'
-        for catName in self.categories:
-            print catName
-        print 'end'
-
         if(categoryName not in self.categories):
             self.categories.append(categoryName)
             return OpResult.SUCCESS

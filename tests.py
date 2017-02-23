@@ -98,17 +98,28 @@ class Tests(unittest.TestCase):
 
    
     def test_product_exists(self):
-        db = Database()
-        product1 = Product('cat', 'animal')
-        product2 = Product('cat', 'petanimals')
-        db.register_new_category('animal')
-        db.register_new_category('petanimals')
-        db.add_product(product1, 10.00)
-        db.add_product(product2, 15.00)
 
-        self.assertEqual (db.product_exists(Product('cat', 'pen')), OpResult.SUCCESS)
+        # serverName, serverPort = 'localhost', 12000
+        # client = Client()
+        # client.connect(serverName, serverPort)
+        
+        # client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
+
+        # client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal')) 
+        # client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'petanimals'))
+
+        # answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'animal', 10.00))
+        # answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'petanimals', 15.00))
+
+
+        db = DatabaseAPI()
+        product1 = Product('apple', 'pen')
+        db.register_new_category('pen')
+        db.add_product(product1, 10.00)
+
+        self.assertEqual (db.product_exists(Product('apple', 'pen')), OpResult.SUCCESS)
        
-        self.assertEqual (db.product_exists( Product('no', 'yaw') ), OpResult.PRODUCT_NOT_FOUND)
+        self.assertEqual (db.product_exists( Product('apple', 'yaw') ), OpResult.PRODUCT_NOT_FOUND)
        
 
     def test_find_products(self):
