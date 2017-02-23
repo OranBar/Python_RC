@@ -73,6 +73,17 @@ class Tests(unittest.TestCase):
         client.close_connection()
 
 
+    def test_product_exists(self):
+        db = DatabaseAPI()
+        product1 = Product('apple', 'pen')
+        db.register_new_category('pen')
+        db.add_product(product1, 10.00)
+
+        self.assertEqual (db.product_exists(Product('apple', 'pen')), OpResult.SUCCESS)
+       
+        self.assertEqual (db.product_exists( Product('apple', 'yaw') ), OpResult.PRODUCT_NOT_FOUND)
+
+
     def test_add_product(self):
         serverName, serverPort = 'localhost', 12000
         client = Client()
@@ -83,7 +94,6 @@ class Tests(unittest.TestCase):
         client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal')) 
         client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'petanimals'))
         
-
         answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'animal', 10.00))
         self.assertEqual (answer.opresult, OpResult.SUCCESS)
 
@@ -96,31 +106,6 @@ class Tests(unittest.TestCase):
         answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'blackhole', 15.00))
         self.assertEqual (answer.opresult, OpResult.CATEGORY_NOT_FOUND)
 
-   
-    def test_product_exists(self):
-
-        # serverName, serverPort = 'localhost', 12000
-        # client = Client()
-        # client.connect(serverName, serverPort)
-        
-        # client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
-
-        # client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal')) 
-        # client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'petanimals'))
-
-        # answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'animal', 10.00))
-        # answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'petanimals', 15.00))
-
-
-        db = DatabaseAPI()
-        product1 = Product('apple', 'pen')
-        db.register_new_category('pen')
-        db.add_product(product1, 10.00)
-
-        self.assertEqual (db.product_exists(Product('apple', 'pen')), OpResult.SUCCESS)
-       
-        self.assertEqual (db.product_exists( Product('apple', 'yaw') ), OpResult.PRODUCT_NOT_FOUND)
-       
 
     def test_find_products(self):
         db = Database()
@@ -140,7 +125,7 @@ class Tests(unittest.TestCase):
         self.assertFalse (db.find_products( Product('no', 'yaw') )[1])
     
     def test_category_list(self):
-        db = Database()
+        db = DatabaseAPI()
         product1 = Product('cat', 'animal')
         product2 = Product('cat', 'petanimals')
 
@@ -151,8 +136,8 @@ class Tests(unittest.TestCase):
         self.assertEqual (db.add_product(product1, 10.00), OpResult.SUCCESS)
         self.assertEqual (db.add_product(product2, 15.00), OpResult.SUCCESS)
 
-        self.assertEqual (db.list_categories()[0], 'animal' )
-        self.assertEqual (db.list_categories()[1], 'petanimals' )
+        self.assertEqual (db.list_categories()[1][0], 'animal' )
+        self.assertEqual (db.list_categories()[1][1], 'petanimals' )
         
     def test_offers(self):
         db = Database()

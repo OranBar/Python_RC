@@ -117,7 +117,7 @@ class DatabaseAPI(object):
             return (OpResult.CATEGORY_NOT_FOUND, [])
 
     def list_categories(self):
-        return (OpResult.SUCCESS, categories)
+        return (OpResult.SUCCESS, self.categories)
 
     def make_offer(self, product, price):
         if product not in self.offers:
