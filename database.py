@@ -90,6 +90,9 @@ class DatabaseAPI(object):
         if not self.is_valid_product(product[0]):
             return OpResult.INVALID_PRODUCT_NAME
 
+        if not self.is_valid_category(product.category):
+            return self.is_valid_category(product.category)
+
         if product in self.offers:
             return OpResult.SUCCESS
         else: 
@@ -120,12 +123,12 @@ class DatabaseAPI(object):
         return (OpResult.SUCCESS, self.categories)
 
     def make_offer(self, product, price):
-        if product not in self.offers:
-            return OpResult.PRODUCT_NOT_FOUND
+        if self.product_exists(product) != OpResult.SUCCESS:
+            return self.product_exists(product)
         
-        if offers[product] >= price:
+        if self.offers[product] >= price:
             return OpResult.BID_TOO_LOW
         else: 
-            offers[product] = price
+            self.offers[product] = price
             return OpResult.SUCCESS
 

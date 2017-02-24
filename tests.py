@@ -5,9 +5,59 @@ from threading import Thread
 import subprocess
 import unittest
 
+class DatabaseAPITests(unittest.TestCase):
+    def test_register_new_user(self):
+        db = DatabaseAPI()
 
+        for user in db.userToPass:
+            print user
 
-class Tests(unittest.TestCase):
+        self.assertEqual (db.register_new_user('user', 'pass'), OpResult.SUCCESS)
+        self.assertEqual (db.register_new_user('user', 'pass'), OpResult.USER_ALREADY_EXISTS)
+
+     def test_product_exists(self):
+        db = DatabaseAPI()
+        product1 = Product('apple', 'pen')
+        db.register_new_category('pen')
+        db.add_product(product1, 10.00)
+
+        self.assertEqual (db.product_exists(Product('apple', 'pen')), OpResult.SUCCESS)
+       
+        self.assertEqual (db.product_exists( Product('apple', 'yaw') ), OpResult.PRODUCT_NOT_FOUND)
+
+    def test_find_products(self):
+        db = DatabaseAPI()
+        product1 = Product('cat', 'animal')
+        product2 = Product('cat', 'petanimals')
+        db.register_new_category('animal')
+        db.register_new_category('petanimals')
+        db.add_product(product1, 10.00)
+        db.add_product(product2, 15.00)
+
+        self.assertEqual (db.find_products('cat')[1][0].name, 'cat')
+        self.assertEqual (db.find_products('cat')[1][0].category, 'animal')
+        self.assertEqual (db.find_products('cat')[1][1].name, 'cat')
+        self.assertEqual (db.find_products('cat')[1][1].category, 'petanimals')
+
+        self.assertEqual (db.find_products( 'nope' )[0], OpResult.PRODUCT_NOT_FOUND )
+        self.assertFalse (db.find_products( 'nope' )[1])
+    
+    def test_category_list(self):
+        db = DatabaseAPI()
+        product1 = Product('cat', 'animal')
+        product2 = Product('cat', 'petanimals')
+
+        self.assertEqual (db.register_new_category('animal'), OpResult.SUCCESS)
+        self.assertEqual (db.register_new_category('animal'), OpResult.CATEGORY_ALREADY_EXISTS)
+        self.assertEqual (db.register_new_category('petanimals'), OpResult.SUCCESS) 
+        
+        self.assertEqual (db.add_product(product1, 10.00), OpResult.SUCCESS)
+        self.assertEqual (db.add_product(product2, 15.00), OpResult.SUCCESS)
+
+        self.assertEqual (db.list_categories()[1][0], 'animal' )
+        self.assertEqual (db.list_categories()[1][1], 'petanimals' )
+
+class ProtocolTests(unittest.TestCase):
 
     def test_message_packing_and_unpacking(self):
         data = ProtocolPacket(Commands.REGISTER, OpResult.SUCCESS, 'test', 'testa')
@@ -19,17 +69,6 @@ class Tests(unittest.TestCase):
         self.assertEqual(unpacked_data.opresult, OpResult.SUCCESS)
         self.assertEqual(unpacked_data.arg1, 'test')
         self.assertEqual(unpacked_data.arg2, 'testa')
-
-
-    def test_register_new_user(self):
-        db = DatabaseAPI()
-
-        for user in db.userToPass:
-            print user
-
-        self.assertEqual (db.register_new_user('user', 'pass'), OpResult.SUCCESS)
-        self.assertEqual (db.register_new_user('user', 'pass'), OpResult.USER_ALREADY_EXISTS)
-
     
     def test_check_credentials(self):
         serverName, serverPort = 'localhost', 12000
@@ -72,18 +111,6 @@ class Tests(unittest.TestCase):
 
         client.close_connection()
 
-
-    def test_product_exists(self):
-        db = DatabaseAPI()
-        product1 = Product('apple', 'pen')
-        db.register_new_category('pen')
-        db.add_product(product1, 10.00)
-
-        self.assertEqual (db.product_exists(Product('apple', 'pen')), OpResult.SUCCESS)
-       
-        self.assertEqual (db.product_exists( Product('apple', 'yaw') ), OpResult.PRODUCT_NOT_FOUND)
-
-
     def test_add_product(self):
         serverName, serverPort = 'localhost', 12000
         client = Client()
@@ -105,48 +132,39 @@ class Tests(unittest.TestCase):
 
         answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'blackhole', 15.00))
         self.assertEqual (answer.opresult, OpResult.CATEGORY_NOT_FOUND)
-
-
-    def test_find_products(self):
-        db = DatabaseAPI()
-        product1 = Product('cat', 'animal')
-        product2 = Product('cat', 'petanimals')
-        db.register_new_category('animal')
-        db.register_new_category('petanimals')
-        db.add_product(product1, 10.00)
-        db.add_product(product2, 15.00)
-
-        self.assertEqual (db.find_products('cat')[1][0].name, 'cat')
-        self.assertEqual (db.find_products('cat')[1][0].category, 'animal')
-        self.assertEqual (db.find_products('cat')[1][1].name, 'cat')
-        self.assertEqual (db.find_products('cat')[1][1].category, 'petanimals')
-
-        self.assertEqual (db.find_products( 'nope' )[0], OpResult.PRODUCT_NOT_FOUND )
-        self.assertFalse (db.find_products( 'nope' )[1])
-    
-    def test_category_list(self):
-        db = DatabaseAPI()
-        product1 = Product('cat', 'animal')
-        product2 = Product('cat', 'petanimals')
-
-        self.assertEqual (db.register_new_category('animal'), OpResult.SUCCESS)
-        self.assertEqual (db.register_new_category('animal'), OpResult.CATEGORY_ALREADY_EXISTS)
-        self.assertEqual (db.register_new_category('petanimals'), OpResult.SUCCESS) 
-        
-        self.assertEqual (db.add_product(product1, 10.00), OpResult.SUCCESS)
-        self.assertEqual (db.add_product(product2, 15.00), OpResult.SUCCESS)
-
-        self.assertEqual (db.list_categories()[1][0], 'animal' )
-        self.assertEqual (db.list_categories()[1][1], 'petanimals' )
         
     def test_offers(self):
-        db = Database()
-        product1 = Product('cat', 'animal')
-        product2 = Product('cat', 'petanimals')
-        db.add_product(product1, 10.00)
-        db.add_product(product2, 15.00)
 
-        self.assertEqual( db.make_offer )
+        serverName, serverPort = 'localhost', 12000
+        client = Client()
+        client.connect(serverName, serverPort)
+        
+        client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
+
+        client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'horses')) 
+        client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'bottles'))
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'stallion', 'horses', 15.00))
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'water', 'bottle', 10.00))
+
+        client2 = Client()
+        client2.connect(serverName, serverPort)
+        
+        client2.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user2', 'pass'))
+
+        answer = client2.send_message( ProtocolPacket(Commands.OFFER, 0, 'stlion', 'horse', 10.00))
+        self.assertEqual( answer.opresult,  OpResult.PRODUCT_NOT_FOUND)
+
+        answer = client2.send_message( ProtocolPacket(Commands.OFFER, 0, 'stallion', 'horses', 10.00))
+        self.assertEqual( answer.opresult,  OpResult.BID_TOO_LOW)
+
+        answer = client2.send_message( ProtocolPacket(Commands.OFFER, 0, 'stallion', 'horses', 15.01))
+        self.assertEqual( answer.opresult,  OpResult.SUCCESS)
+
+    def test_notifications():
+        pass
+        
+
 
 if __name__ == '__main__':
     # unittest.main()

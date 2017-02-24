@@ -11,8 +11,17 @@ class Commands(IntEnum):
     REGISTER = 1
     SELL = 2
     OFFER = 3
-    NOTIFYME = 4
-    CLOSE_CONNECTION = 5
+    NOTIFYME_PRODUCT_CHANGE = 4
+    NOTIFYME_NEW_PRODUCTS = 5
+    NOTIFYME_ALL = 6
+    CLOSE_CONNECTION = 7
+
+class NotificationType(IntEnum):
+    HIGHER_BID = 0
+    NEW_PRODUCT = 1
+    PRODUCT_SOLD = 2
+
+    
 
 @unique
 class OpResult(IntEnum):

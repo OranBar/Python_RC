@@ -60,8 +60,15 @@ class MockServer(Server):
     def __init__(self, serverName, serverPort):
         Server.__init__(self, serverName, serverPort)
         self.database.register_new_user('user', 'pass')       
+        self.database.register_new_user('user2', 'pass')
 
 class ServerMinion(object):
+
+    notificationDaemonPort = 0
+
+    def __init__(self):
+        # TODO: get incremental port
+        pass
 
     def serve_client(self, database, connection, state):
         print '\nServe_Client: State is ' + state.__str__()
@@ -105,9 +112,12 @@ class ServerMinion(object):
                 msg.opresult = database.add_product(Product(msg.arg1, msg.arg2), msg.price)
                 
             elif(cmd == Commands.OFFER):
-                pass
-
+                msg.opresult = database.make_offer(Product(msg.arg1, msg.arg2), msg.price)
+    
             elif(cmd == Commands.NOTIFYME):
+                # Check valid Product
+                # Create NotificationDaemon
+                # Send NotificationDaemon port
                 pass
                 
             print 'Result: ' + OpResult(msg.opresult).__str__()
@@ -139,4 +149,61 @@ class ServerMinion(object):
                 self.serve_client(database, connection, ConnectionFSM.AUTHENTICATED)
             else:
                 self.serve_client(database, connection, ConnectionFSM.LOGIN)
+        
+
+
+class NotificationDaemon(object):
+
+    database = None
+    connection = None
+
+    products_on_watch = []
+    notify_new_products = False
+    notify_all = False
+
+    def __init__(self, database, port):
+        self.database = database
+        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serverSocket.bind(('NotificationDaemon'+port, port))
+        self.serverSocket.listen(1)
+        print 'NotificationDaemon Listening'
+        connection, addr = self.serverSocket.accept()
+        connection.send('Client connection detected')
+        print 'Client connection detected'
+        
+
+    def register_notification(self, notificationCommand, product):
+        assert notificationCommand == Commands.NOTIFYME or notificationCommand == Commands.NOTIFYME_ALL
+
+        if notificationCommand == Commands.NOTIFYME_PRODUCT_CHANGE:
+            self.products_on_watch.append(product)
+        
+        if notificationCommand == Commands.NOTIFYME_NEW_PRODUCTS:
+            self.notify_new_products = True
+
+        if notificationCommand == Commands.NOTIFYME_ALL:
+            self.notify_all = True
+
+        
+    def server_data_changed(self, notificationType, product, price, user):
+        if self.connection == None:    
+            return
+            
+        if notificationType == NotificationType.NEW_PRODUCT:
+            if notify_new_products or self.notify_all:
+                self.send_message('NEW PRODUCT: '+product+' - Start Price: '+price+'Seller: '+user)
+
+        if notificationType == NotificationType.PRODUCT_SOLD:
+            if (product in self.products_on_watch) or self.notify_all:
+                self.send_message('PRODUCT SOLD: '+product+' - Final Price: '+price+'Sold To: '+user)
+
+        if notificationType == NotificationType.HIGHER_BID:
+            if (product in self.products_on_watch) or self.notify_all:
+                self.send_message('HIGHER BID: Product: '+product+' - Bid: '+price+'Bidder: '+user)
+            
+                
+        
+
+    def send_message(self, msg):
+        self.connection.send('NOTIFICATION MINION: '+msg)
         
