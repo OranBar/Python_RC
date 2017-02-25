@@ -156,7 +156,7 @@ class ServerMinion(object):
                 msg.opresult = database.register_new_category(msg.arg2)
                 
             elif(cmd == Commands.ADD):
-                msg.opresult = database.add_product(Product(msg.arg1, msg.arg2), msg.price)
+                msg.opresult = database.add_product(Product(msg.arg1, msg.arg2), msg.price, client_username)
                 
             elif(cmd == Commands.OFFER):
                 msg.opresult = database.make_offer(Product(msg.arg1, msg.arg2), msg.price, client_username)
@@ -244,6 +244,8 @@ class NotificationDaemon(object):
     def register_notification(self, notificationCommand, product = None):
         assert notificationCommand == Commands.NOTIFYME_PRODUCT_CHANGE or notificationCommand == Commands.NOTIFYME_NEW_PRODUCTS or notificationCommand == Commands.NOTIFYME_ALL 
 
+        self.database.register_for_notifications(self)
+
         if notificationCommand == Commands.NOTIFYME_PRODUCT_CHANGE:
             self.products_on_watch.append(product)
         
@@ -259,20 +261,20 @@ class NotificationDaemon(object):
             return
             
         if notificationType == NotificationType.NEW_PRODUCT:
-            if notify_new_products or self.notify_all:
-                self.send_message('NEW PRODUCT: '+product+' - Start Price: '+price+'Seller: '+user)
+            if self.notify_new_products or self.notify_all:
+                self.send_message('\033[94m NEW PRODUCT: '+product.__str__()+' - Start Price: '+price.__str__()+' - Seller: '+user)
 
         if notificationType == NotificationType.PRODUCT_SOLD:
             if (product in self.products_on_watch) or self.notify_all:
-                self.send_message('PRODUCT SOLD: '+product+' - Final Price: '+price+'Sold To: '+user)
+                self.send_message('\033[94m PRODUCT SOLD: '+product.__str__()+' - Final Price: '+price.__str__()+' - Sold To: '+user)
 
         if notificationType == NotificationType.HIGHER_BID:
             if (product in self.products_on_watch) or self.notify_all:
-                self.send_message('HIGHER BID: Product: '+product+' - Bid: '+price+'Bidder: '+user)
+                self.send_message('\033[94m HIGHER BID: Product: '+product.__str__()+' - Bid: '+price.__str__()+' - Bidder: '+user)
             
                 
         
 
     def send_message(self, msg):
-        self.connection.send('NOTIFICATION MINION: '+msg)
+        self.connection.send(msg)
         

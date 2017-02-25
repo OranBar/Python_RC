@@ -8,6 +8,7 @@ import socket
 from protocol import *
 import sys
 from threading import Thread
+import time
 
 
 class Client(object):
@@ -23,11 +24,11 @@ class Client(object):
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.clientSocket.connect((serverName, serverPort))
         
-        connection_open = True
+        self.connection_open = True
 
         self.__connect_to_notification_minion()
         
-        notification_listener_thread = Thread(target =  self.__echo_socket_messages, args = ())
+        notification_listener_thread = Thread(target =  self.__echo_socket_messages, args = (self.notifications_socket,))
         notification_listener_thread.start()
         
         # self.__echo_socket_messages()
@@ -42,13 +43,17 @@ class Client(object):
         print 'Connecting to '+answer.arg1+' '+int(answer.price).__str__()
         self.notifications_socket.connect( (answer.arg1, int(answer.price)) )
 
-    def __echo_socket_messages(self):
-        assert (self.notifications_socket != None)
-
+    def __echo_socket_messages(self, notifications_socket):
+        assert (notifications_socket != None)
+        
         while self.connection_open:
-            notification_msg = self.notifications_socket.recv(2048)
-            last_recv_notification = notification_msg
-            print '\033[94m'+ notification_msg
+            self.last_recv_notification = notifications_socket.recv(2048)
+            if(self.last_recv_notification == ''):
+                print 'Server closed connection: Closing Notification Connection'
+                notifications_socket.close()
+                return
+            
+            print time.time().__str__()+' MsgReceived: '+self.last_recv_notification
             sys.stdout.flush()
     
     def send_message(self, msg):

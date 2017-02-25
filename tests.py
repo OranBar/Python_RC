@@ -4,6 +4,7 @@ from server import *
 from threading import Thread
 import subprocess
 import unittest
+import time
 
 class DatabaseAPITests(unittest.TestCase):
     def test_register_new_user(self):
@@ -19,7 +20,7 @@ class DatabaseAPITests(unittest.TestCase):
         db = DatabaseAPI()
         product1 = Product('apple', 'pen')
         db.register_new_category('pen')
-        db.add_product(product1, 10.00)
+        db.add_product(product1, 10.00, 'user')
 
         self.assertEqual (db.product_exists(Product('apple', 'pen')), OpResult.SUCCESS)
        
@@ -31,8 +32,8 @@ class DatabaseAPITests(unittest.TestCase):
         product2 = Product('cat', 'petanimals')
         db.register_new_category('animal')
         db.register_new_category('petanimals')
-        db.add_product(product1, 10.00)
-        db.add_product(product2, 15.00)
+        db.add_product(product1, 10.00, 'user')
+        db.add_product(product2, 15.00, 'user')
 
         self.assertEqual (db.find_products('cat')[1][0].name, 'cat')
         self.assertEqual (db.find_products('cat')[1][0].category, 'animal')
@@ -51,8 +52,8 @@ class DatabaseAPITests(unittest.TestCase):
         self.assertEqual (db.register_new_category('animal'), OpResult.CATEGORY_ALREADY_EXISTS)
         self.assertEqual (db.register_new_category('petanimals'), OpResult.SUCCESS) 
         
-        self.assertEqual (db.add_product(product1, 10.00), OpResult.SUCCESS)
-        self.assertEqual (db.add_product(product2, 15.00), OpResult.SUCCESS)
+        self.assertEqual (db.add_product(product1, 10.00, 'user'), OpResult.SUCCESS)
+        self.assertEqual (db.add_product(product2, 15.00, 'user'), OpResult.SUCCESS)
 
         self.assertEqual (db.list_categories()[1][0], 'animal' )
         self.assertEqual (db.list_categories()[1][1], 'petanimals' )
@@ -62,7 +63,7 @@ class DatabaseAPITests(unittest.TestCase):
         product = Product('Keyboard', 'Electronics')
 
         self.assertEqual (db.register_new_category(product.category), OpResult.SUCCESS)
-        self.assertEqual (db.add_product(product, 10.00), OpResult.SUCCESS)
+        self.assertEqual (db.add_product(product, 10.00, 'user'), OpResult.SUCCESS)
         self.assertEqual (db.make_offer(product, 15.00, 'Chuck Norris'), OpResult.SUCCESS)
         self.assertEqual (db.make_offer(product, 20.00, 'Chuck Norris'), OpResult.SUCCESS)
 
@@ -262,6 +263,9 @@ class ProtocolTests(unittest.TestCase):
 
         client2.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user2', 'pass'))
         client2.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category, 20.00))
+        print 'TIMECHECK '+time.time().__str__()
+        time.sleep(0.5)
+        self.assertEqual( client6.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
        
         client3 = Client()
         client3.connect(serverName, serverPort)
@@ -289,8 +293,8 @@ class ProtocolTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # unittest.main()
-    suite = unittest.TestLoader().loadTestsFromTestCase(Tests)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.main()
+    # suite = unittest.TestLoader().loadTestsFromTestCase(Tests)
+    # unittest.TextTestRunner(verbosity=2).run(suite)
 
 
