@@ -30,8 +30,17 @@ class DatabaseAPI(object):
 
     def is_valid_password(self, str):
         return self.is_valid(str)
+    
+    def is_valid_product(self, product):
+        if not self.is_valid_product_name(product.name):
+            return self.is_valid_product_name(product.name)
 
-    def is_valid_product(self, str):
+        if not self.is_valid_category(self, product.category):
+            return self.is_valid_category(self, product.category)
+        
+        return OpResult.SUCCESS
+
+    def is_valid_product_name(self, str):
         return self.is_valid(str)
 
     def is_valid_category(self, str):
@@ -78,7 +87,7 @@ class DatabaseAPI(object):
 
     # Add minimum price
     def add_product(self, product, startPrice):
-        if not self.is_valid_product(product.name):
+        if not self.is_valid_product_name(product.name):
             return OpResult.INVALID_PRODUCT_NAME
         if not self.is_valid_category(product.category):
             return OpResult.INVALID_CATEGORY_NAME
@@ -97,7 +106,7 @@ class DatabaseAPI(object):
         return OpResult.SUCCESS
 
     def product_exists(self, product):
-        if not self.is_valid_product(product[0]):
+        if not self.is_valid_product_name(product[0]):
             return OpResult.INVALID_PRODUCT_NAME
 
         if not self.is_valid_category(product.category):
@@ -109,7 +118,7 @@ class DatabaseAPI(object):
             return OpResult.PRODUCT_NOT_FOUND
 
     def find_products(self, productName):
-        if not self.is_valid_product(productName):
+        if not self.is_valid_product_name(productName):
             return (OpResult.INVALID_PRODUCT_NAME, None)
 
         result = filter(lambda p: p[0]==productName, self.offers)
@@ -120,7 +129,7 @@ class DatabaseAPI(object):
             
 
     def list_products_in_category(self, categoryName):
-        if not self.is_valid_product(productName):
+        if not self.is_valid_product_name(productName):
             return OpResult.INVALID_CATEGORY_NAME
 
         result = filter(lambda p: p[1]==categoryName, self.offers.keys)

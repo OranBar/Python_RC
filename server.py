@@ -13,6 +13,7 @@ from protocol import *
 from copy import *
 from database import *
 import sys
+import itertools
 
 class ConnectionFSM(Enum):
     LOGIN = 1
@@ -52,7 +53,7 @@ class Server(object):
     def process_connection(self, conn):
         msgHandler = ServerMinion()
         print 'Starting Minion Thread'
-        serverMinionThread = Thread(target =  msgHandler.serve_client, args = (self.database, conn, ConnectionFSM.LOGIN, ''))
+        serverMinionThread = Thread(target =  msgHandler.connect_to_minion, args = (self.database, conn, ConnectionFSM.LOGIN, ''))
         serverMinionThread.start()
     
 
@@ -65,16 +66,53 @@ class MockServer(Server):
         self.database.register_new_user('user3', 'pass')
 
 class ServerMinion(object):
+    #Static shared variable 
+    next_available_port = 49152
 
-    notificationDaemonPort = 0
-    
-    def __init__(self):
-        # TODO: get incremental port
-        pass
+    notificationDaemon = None
 
-    def serve_client(self, database, connection, state, client_username):
+    def connect_to_minion(self, database, connection, state, client_username):
         print '\nServe_Client: State is ' + state.__str__()
+        
+        packed_msg = connection.recv(2048)
+        msg = ProtocolPacket.unpack_data(packed_msg)
+        assert msg.cmd == Commands.CONNECT
 
+        notificationDaemonPort = ServerMinion.next_available_port
+        ServerMinion.next_available_port += 1
+        self.notificationDaemon = NotificationDaemon(notificationDaemonPort)
+        
+        notificationDaemon_thread = Thread(target =  self.notificationDaemon.start, args = (database, notificationDaemonPort))
+        notificationDaemon_thread.start()
+        
+        msg.arg1 = self.notificationDaemon.name
+        # Although semantically wrong, it is better to save the port number as a variable that 
+        # represents an numeric value, such as price
+        msg.price = self.notificationDaemon.port
+        msg.opresult = OpResult.SUCCESS
+        connection.send ( msg.pack_data() )
+
+        self.serve_client(database, connection, state, client_username)
+    
+    def serve_client(self, database, connection, state, client_username):
+        # print '\nServe_Client: State is ' + state.__str__()
+        
+        # packed_msg = connection.recv(2048)
+        # assert packed_msg.cmd == Commands.CONNECT
+
+        
+        # notificationDaemonPort = ServerMinion.next_available_port
+        # ServerMinion.next_available_port += 1
+        # self.notificationDaemon = NotificationDaemon()
+        
+        # notificationDaemon_thread = Thread(target =  self.notificationDaemon.start, args = (database, notificationDaemonPort))
+        # notificationDaemon_thread.start()
+        
+        # msg.arg1 = self.notificationDaemon.name
+        # msg.arg2 = self.notificationDaemon.port
+        # msg.opresult = OpResult.SUCCESS
+        # connection.send ( msg.pack_data() )
+        
         #Add timeout
         packed_msg = connection.recv(2048)
         
@@ -102,9 +140,20 @@ class ServerMinion(object):
             connection.close()
             return
 
+        # if(cmd == Commands.CONNECT):
+        #     # Send NotificationDaemon name and port
+        #     msg.arg1 = self.notificationDaemon.name
+        #     msg.arg2 = self.notificationDaemon.port
+        #     msg.opresult = OpResult.SUCCESS
+        #     connection.send ( msg.pack_data() )
+        #     self.serve_client(database, connection, state, client_username)
+        #     return
+
         if(state is ConnectionFSM.LOGIN):
             self.__handle_login(database, connection, msg)
-        elif(state is ConnectionFSM.AUTHENTICATED):
+            return
+
+        if(state is ConnectionFSM.AUTHENTICATED):
             if(cmd == Commands.LOGIN):
                 msg.opresult = OpResult.ALREADY_AUTHENTICATED
                 
@@ -122,13 +171,14 @@ class ServerMinion(object):
 
             elif(cmd == Commands.NOTIFYME):
                 # Check valid Product
-                # Create NotificationDaemon
-                # Send NotificationDaemon port
-                pass
+                if not database.is_valid_product(product.name):
+                    msg.opresult = database.is_valid_product(Product.name)
+                else:                    
+                    msg.opresult = OpResult.SUCCESS
                 
             print 'Result: ' + OpResult(msg.opresult).__str__()
             connection.send ( msg.pack_data() )
-            self.serve_client(database,connection, state, client_username)
+            self.serve_client(database, connection, state, client_username)
                
 
 
@@ -161,6 +211,8 @@ class ServerMinion(object):
 
 class NotificationDaemon(object):
 
+    name = ''
+    port = 0
     database = None
     connection = None
 
@@ -168,15 +220,22 @@ class NotificationDaemon(object):
     notify_new_products = False
     notify_all = False
 
-    def __init__(self, database, port):
+    def __init__(self, port):
+        self.name = 'localhost'
+        self.port = port
+
+    def start(self, database, port):
+        # self.name = 'NotificationDaemon'+port.__str__()
+        # self.port = port
+        print 'NotificationDaemon: Name = {0}, Port = {1}'.format(self.name, self.port)
         self.database = database
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serverSocket.bind(('NotificationDaemon'+port, port))
-        self.serverSocket.listen(1)
-        print 'NotificationDaemon Listening'
-        connection, addr = self.serverSocket.accept()
-        connection.send('Client connection detected')
-        print 'Client connection detected'
+        new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        new_socket.bind( (self.name, self.port) )
+        new_socket.listen(1)
+        print 'NotificationDaemon: Listening'
+        self.connection, addr = new_socket.accept()
+        self.connection.send('Client connection detected')
+        print 'NotificationDaemon: Client connection detected'
         
 
     def register_notification(self, notificationCommand, product):

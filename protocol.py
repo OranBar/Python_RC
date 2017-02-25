@@ -7,15 +7,16 @@ Product = collections.namedtuple('Product', 'name category')
 
 @unique
 class Commands(IntEnum):
-    LOGIN = 0
-    REGISTER = 1
-    ADD = 2
-    OFFER = 3
-    SELL = 4
-    NOTIFYME_PRODUCT_CHANGE = 5
-    NOTIFYME_NEW_PRODUCTS = 6
-    NOTIFYME_ALL = 7
-    CLOSE_CONNECTION = 8
+    CONNECT = 0
+    LOGIN = 1
+    REGISTER = 2
+    ADD = 3
+    OFFER = 4
+    SELL = 5
+    NOTIFYME_PRODUCT_CHANGE = 6
+    NOTIFYME_NEW_PRODUCTS = 7
+    NOTIFYME_ALL = 8
+    CLOSE_CONNECTION = 9
     
 
 @unique
