@@ -254,9 +254,9 @@ class ProtocolTests(unittest.TestCase):
         
         client1.send_message( ProtocolPacket(Commands.REGISTER, 0, '', product.category)) 
         client1.send_message( ProtocolPacket(Commands.ADD, 0, product.name, product.category, 10.00))
+        time.sleep(0.1)
         self.assertEqual( client4.last_recv_notification, "\033[94m NEW PRODUCT: Product(name='Keyboard', category='Electronics') - Start Price: 10.0 - Seller: user")
         self.assertEqual( client5.last_recv_notification, "\033[94m NEW PRODUCT: Product(name='Keyboard', category='Electronics') - Start Price: 10.0 - Seller: user")
-        #self.assertEqual( client6.last_recv_notification, "\033[94m NEW PRODUCT: Product(name='Keyboard', category='Electronics') - Start Price: 10.0 - Seller: user")
         
         answer = client6.send_message( ProtocolPacket(Commands.NOTIFYME_PRODUCT_CHANGE, 0, product.name, product.category, 15) )
         self.assertEqual(answer.opresult, OpResult.SUCCESS)
@@ -278,17 +278,30 @@ class ProtocolTests(unittest.TestCase):
 
         client3.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user3', 'pass'))
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  15.00))
+        self.assertEqual( client4.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
+        self.assertNotEqual( client5.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
+        self.assertEqual( client6.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  21.00))
+        self.assertEqual( client4.last_recv_notification, "\x1b[94m HIGHER BID: Product: Product(name='Keyboard', category='Electronics') - Bid: 21.0 - Bidder: user3")
+        self.assertNotEqual( client5.last_recv_notification, "\x1b[94m HIGHER BID: Product: Product(name='Keyboard', category='Electronics') - Bid: 21.0 - Bidder: user3")
+        self.assertEqual( client6.last_recv_notification, "\x1b[94m HIGHER BID: Product: Product(name='Keyboard', category='Electronics') - Bid: 21.0 - Bidder: user3")
 
         answer = client1.send_message( ProtocolPacket(Commands.SELL, 0, *product))
         self.assertEqual( answer.opresult, OpResult.SUCCESS)
         self.assertEqual( answer.price, 21.00)
+        self.assertEqual( client4.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='Keyboard', category='Electronics') - Final Price: 21.0 - Sold To: user3")
+        self.assertNotEqual( client5.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='Keyboard', category='Electronics') - Final Price: 21.0 - Sold To: user3")
+        self.assertEqual( client6.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='Keyboard', category='Electronics') - Final Price: 21.0 - Sold To: user3")
 
         fake_product = Product('I Do not exist', 'Unkown')
 
         answer = client1.send_message( ProtocolPacket(Commands.SELL, 0, *fake_product))
         self.assertNotEqual( answer.opresult, OpResult.SUCCESS)
         self.assertEqual( answer.price, 0)
+        self.assertNotEqual( client4.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='I Do not exist', category='Unkown') - Final Price: 21.0 - Sold To: user3")
+        self.assertNotEqual( client5.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='I Do not exist', category='Unkown') - Final Price: 21.0 - Sold To: user3")
+        self.assertNotEqual( client6.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='I Do not exist', category='Unkown') - Final Price: 21.0 - Sold To: user3")
+
 
         client1.close_connection()
         client2.close_connection()
