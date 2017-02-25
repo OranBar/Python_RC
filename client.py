@@ -14,6 +14,9 @@ class Client(object):
     notifications_socket = None
     connection_open = False
 
+    #Variable used for testing
+    last_recv_notification = ''
+
     def connect(self, serverName, serverPort):
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.clientSocket.connect((serverName, serverPort))
@@ -21,7 +24,11 @@ class Client(object):
         connection_open = True
 
         self.__connect_to_notification_minion()
-        self.__echo_socket_messages()
+        
+        notification_listener_thread = Thread(target =  self.__echo_socket_messages, args = (,))
+        notification_listener_thread.start()
+        
+        # self.__echo_socket_messages()
 
     def __connect_to_notification_minion(self):
         answer = self.send_message( ProtocolPacket(Commands.CONNECT, 0, '', '') )
@@ -38,6 +45,7 @@ class Client(object):
 
         while self.connection_open:
             notification_msg = self.notifications_socket.recv(2048)
+            last_recv_notification = notification_msg
             print notification_msg
             sys.stdout.flush()
     

@@ -64,10 +64,14 @@ class MockServer(Server):
         self.database.register_new_user('user', 'pass')       
         self.database.register_new_user('user2', 'pass')
         self.database.register_new_user('user3', 'pass')
+        self.database.register_new_user('user4', 'pass')
+        self.database.register_new_user('user5', 'pass')
+        self.database.register_new_user('user6', 'pass')
+        self.database.register_new_user('user8', 'pass')
 
 class ServerMinion(object):
     #Static shared variable 
-    next_available_port = 49152
+    NEXT_AVAILABLE_PORT = 49152
 
     notificationDaemon = None
 
@@ -78,11 +82,11 @@ class ServerMinion(object):
         msg = ProtocolPacket.unpack_data(packed_msg)
         assert msg.cmd == Commands.CONNECT
 
-        notificationDaemonPort = ServerMinion.next_available_port
-        ServerMinion.next_available_port += 1
-        self.notificationDaemon = NotificationDaemon(notificationDaemonPort)
+        notificationDaemonPort = ServerMinion.NEXT_AVAILABLE_PORT
+        ServerMinion.NEXT_AVAILABLE_PORT += 1
+        self.notificationDaemon = NotificationDaemon(notificationDaemonPort, database)
         
-        notificationDaemon_thread = Thread(target =  self.notificationDaemon.start, args = (database, notificationDaemonPort))
+        notificationDaemon_thread = Thread(target =  self.notificationDaemon.start, args = (,))
         notificationDaemon_thread.start()
         
         msg.arg1 = self.notificationDaemon.name
@@ -140,15 +144,6 @@ class ServerMinion(object):
             connection.close()
             return
 
-        # if(cmd == Commands.CONNECT):
-        #     # Send NotificationDaemon name and port
-        #     msg.arg1 = self.notificationDaemon.name
-        #     msg.arg2 = self.notificationDaemon.port
-        #     msg.opresult = OpResult.SUCCESS
-        #     connection.send ( msg.pack_data() )
-        #     self.serve_client(database, connection, state, client_username)
-        #     return
-
         if(state is ConnectionFSM.LOGIN):
             self.__handle_login(database, connection, msg)
             return
@@ -169,12 +164,22 @@ class ServerMinion(object):
             elif(cmd == Commands.SELL):
                 msg.opresult, msg.price = database.sell_product(Product(msg.arg1, msg.arg2))
 
-            elif(cmd == Commands.NOTIFYME):
+            elif(cmd == Commands.NOTIFYME_PRODUCT_CHANGE):
                 # Check valid Product
-                if not database.is_valid_product(product.name):
-                    msg.opresult = database.is_valid_product(Product.name)
-                else:                    
+                product = (msg.arg1, msg.arg2)
+                if not database.is_valid_product(product):
+                    msg.opresult = database.is_valid_product(product)
+                else:                 
+                    self.notificationDaemon.register_notification(Commands.NOTIFYME_PRODUCT_CHANGE, product)   
                     msg.opresult = OpResult.SUCCESS
+
+            elif(cmd == Commands.NOTIFYME_NEW_PRODUCTS):
+                self.notificationDaemon.register_notification(Commands.NOTIFYME_NEW_PRODUCTS)   
+                msg.opresult = OpResult.SUCCESS
+
+            elif(cmd == Commands.NOTIFYME_ALL):
+                self.notificationDaemon.register_notification(Commands.NOTIFYME_ALL)   
+                msg.opresult = OpResult.SUCCESS
                 
             print 'Result: ' + OpResult(msg.opresult).__str__()
             connection.send ( msg.pack_data() )
@@ -220,15 +225,13 @@ class NotificationDaemon(object):
     notify_new_products = False
     notify_all = False
 
-    def __init__(self, port):
+    def __init__(self, port, database):
         self.name = 'localhost'
         self.port = port
-
-    def start(self, database, port):
-        # self.name = 'NotificationDaemon'+port.__str__()
-        # self.port = port
-        print 'NotificationDaemon: Name = {0}, Port = {1}'.format(self.name, self.port)
         self.database = database
+        
+    def start(self, database):
+        print 'NotificationDaemon: Name = {0}, Port = {1}'.format(self.name, self.port)
         new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         new_socket.bind( (self.name, self.port) )
         new_socket.listen(1)
@@ -238,7 +241,7 @@ class NotificationDaemon(object):
         print 'NotificationDaemon: Client connection detected'
         
 
-    def register_notification(self, notificationCommand, product):
+    def register_notification(self, notificationCommand, product = None):
         assert notificationCommand == Commands.NOTIFYME or notificationCommand == Commands.NOTIFYME_ALL
 
         if notificationCommand == Commands.NOTIFYME_PRODUCT_CHANGE:

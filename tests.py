@@ -223,10 +223,66 @@ class ProtocolTests(unittest.TestCase):
         client3.close_connection()
 
     def test_notifications(self):
-        assert False
-        pass
-
+        serverName, serverPort = 'localhost', 12000
         
+        ######################Notification Listeners 
+        client4 = Client()
+        client4.connect(serverName, serverPort)
+        client4.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user4', 'pass'))
+        
+        answer = client4.send_message( ProtocolPacket(Commands.NOTIFYME_ALL, 0, '', '') )
+        self.assertEqual(answer.opresult, OpResult.SUCCESS)
+
+        client5 = Client()
+        client5.connect(serverName, serverPort)
+        client5.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user5', 'pass'))
+        
+        answer = client5.send_message( ProtocolPacket(Commands.NOTIFYME_NEW_PRODUCTS, 0, '', '') )
+        self.assertEqual(answer.opresult, OpResult.SUCCESS)
+
+        client6 = Client()
+        client6.connect(serverName, serverPort)
+        client6.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user6', 'pass'))
+        ######################
+        
+        client1 = Client()
+        client1.connect(serverName, serverPort)
+        client1.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
+        
+        product = Product('Keyboard', 'Electronics')
+        
+        client1.send_message( ProtocolPacket(Commands.REGISTER, 0, '', product.category)) 
+        client1.send_message( ProtocolPacket(Commands.ADD, 0, product.name, product.category, 10.00))
+        
+        answer = client6.send_message( ProtocolPacket(Commands.NOTIFYME_PRODUCT_CHANGE, 0, *product) )
+        self.assertEqual(answer.opresult, OpResult.SUCCESS)
+
+        client2 = Client()
+        client2.connect(serverName, serverPort)
+
+        client2.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user2', 'pass'))
+        client2.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category, 20.00))
+       
+        client3 = Client()
+        client3.connect(serverName, serverPort)
+
+        client3.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user3', 'pass'))
+        client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  15.00))
+        client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  21.00))
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *product))
+        self.assertEqual( answer.opresult, OpResult.SUCCESS)
+        self.assertEqual( answer.price, 21.00)
+
+        fake_product = Product('I Do not exist', 'Unkown')
+
+        answer = client1.send_message( ProtocolPacket(Commands.SELL, 0, *fake_product))
+        self.assertNotEqual( answer.opresult, OpResult.SUCCESS)
+        self.assertEqual( answer.price, 0)
+
+        client1.close_connection()
+        client2.close_connection()
+        client3.close_connection()
 
 
 if __name__ == '__main__':
