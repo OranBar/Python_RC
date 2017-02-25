@@ -67,13 +67,18 @@ class DatabaseAPITests(unittest.TestCase):
         self.assertEqual (db.make_offer(product, 15.00, 'Chuck Norris'), OpResult.SUCCESS)
         self.assertEqual (db.make_offer(product, 20.00, 'Chuck Norris'), OpResult.SUCCESS)
 
-        self.assertEqual (db.sell_product(product)[0], OpResult.SUCCESS)
-        self.assertEqual (db.sell_product(product)[1], 20.00)
+        answer = db.sell_product(product, 'user')
+        self.assertEqual (answer[0], OpResult.SUCCESS)
+        self.assertEqual (answer[1], 20.00)
+
+        answer = db.sell_product(product, 'user')
+        self.assertEqual (answer[0], OpResult.PRODUCT_NOT_FOUND)
+        
 
         fake_product = Product('I Do not exist', 'Unkown')
 
-        self.assertNotEqual (db.sell_product(fake_product)[0], OpResult.SUCCESS)
-        self.assertEqual (db.sell_product(fake_product)[1], 0)
+        self.assertNotEqual (db.sell_product(fake_product, 'Chuck Norris')[0], OpResult.SUCCESS)
+        self.assertEqual (db.sell_product(fake_product, 'Chuck Norris')[1], 0)
 
 class ProtocolTests(unittest.TestCase):
 
@@ -209,16 +214,21 @@ class ProtocolTests(unittest.TestCase):
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  15.00))
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  21.00))
 
+        answer = client2.send_message( ProtocolPacket(Commands.SELL, 0, *product))
+        self.assertEqual( answer.opresult, OpResult.NOT_PRODUCT_OWNER)
+   
         answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *product))
         self.assertEqual( answer.opresult, OpResult.SUCCESS)
         self.assertEqual( answer.price, 21.00)
 
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *product))
+        self.assertEqual( answer.opresult, OpResult.PRODUCT_NOT_FOUND)
+       
         fake_product = Product('I Do not exist', 'Unkown')
 
         answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *fake_product))
         self.assertNotEqual( answer.opresult, OpResult.SUCCESS)
-        self.assertEqual( answer.price, 0)
-
+             
         client.close_connection()
         client2.close_connection()
         client3.close_connection()
@@ -226,7 +236,7 @@ class ProtocolTests(unittest.TestCase):
     def test_notifications(self):
         serverName, serverPort = 'localhost', 12000
         
-        ######################Notification Listeners 
+        ###################### Notification Listeners 
         client4 = Client()
         client4.connect(serverName, serverPort)
         client4.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user4', 'pass'))

@@ -24,9 +24,9 @@ class OpResult(IntEnum):
     ### Generic Results ##
     NONE = 0
     SUCCESS = 1
-    TIMEOUT = 2
+    # TIMEOUT = 2
     # Database Results # 
-    ### Registration Results ###
+    ### Registration Results ##
     USER_ALREADY_EXISTS = 3
     ### Login Results ##
     INVALID_USERNAME = 4
@@ -43,6 +43,7 @@ class OpResult(IntEnum):
     CATEGORY_NOT_FOUND = 14
     PRODUCT_NOT_FOUND = 15
     BID_TOO_LOW = 16
+    NOT_PRODUCT_OWNER = 17
 
 
 class ProtocolPacket(object):

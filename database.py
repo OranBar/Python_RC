@@ -11,6 +11,7 @@ class DatabaseAPI(object):
     userToPass = {}
     categories = []
     offers = {}
+    product_owner = {}
 
     daemons_to_notifty = []
 
@@ -23,7 +24,8 @@ class DatabaseAPI(object):
         self.userToPass = {}
         self.categories = []
         self.offers = {} 
-
+        self.product_owner = {}
+        self.daemons_to_notifty = []
 
     def is_valid_username(self, str):
         return self.is_valid(str)
@@ -103,6 +105,7 @@ class DatabaseAPI(object):
             daemon.server_data_changed(NotificationType.NEW_PRODUCT, product, startPrice, user)
 
         self.offers[product] = (startPrice, '-')
+        self.product_owner[product] = user
         return OpResult.SUCCESS
 
     def product_exists(self, product):
@@ -156,17 +159,22 @@ class DatabaseAPI(object):
 
             return OpResult.SUCCESS
 
-    def sell_product(self, product):
+    def sell_product(self, product, user):
         if self.product_exists(product) != OpResult.SUCCESS:
             return (self.product_exists(product), 0)
         
+        if self.product_owner[product] != user:
+            return (OpResult.NOT_PRODUCT_OWNER, 0)
+
         # (Product(ProductName, ProductCategory), price, winner)
         for daemon in self.daemons_to_notifty:
-            # daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, self.offers[product])
             daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, *self.offers[product])
         
         # return (OpResult.SUCCESS, self.offers[product])
-        return OpResult.SUCCESS, self.offers[product][0]
+        final_price = self.offers[product][0]
+        del self.offers[product] 
+        del self.product_owner[product]
+        return OpResult.SUCCESS, final_price
 
     def register_for_notifications(self, notificationDaemon):
         assert notificationDaemon is not None

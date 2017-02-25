@@ -162,7 +162,8 @@ class ServerMinion(object):
                 msg.opresult = database.make_offer(Product(msg.arg1, msg.arg2), msg.price, client_username)
     
             elif(cmd == Commands.SELL):
-                msg.opresult, msg.price = database.sell_product(Product(msg.arg1, msg.arg2))
+                product = Product(msg.arg1, msg.arg2)
+                msg.opresult, msg.price = database.sell_product(product, client_username)
 
             elif(cmd == Commands.NOTIFYME_PRODUCT_CHANGE):
                 # Check valid Product
