@@ -35,8 +35,8 @@ class DatabaseAPI(object):
         if not self.is_valid_product_name(product.name):
             return self.is_valid_product_name(product.name)
 
-        if not self.is_valid_category(self, product.category):
-            return self.is_valid_category(self, product.category)
+        if not self.is_valid_category(product.category):
+            return self.is_valid_category(product.category)
         
         return OpResult.SUCCESS
 

@@ -254,7 +254,7 @@ class ProtocolTests(unittest.TestCase):
         client1.send_message( ProtocolPacket(Commands.REGISTER, 0, '', product.category)) 
         client1.send_message( ProtocolPacket(Commands.ADD, 0, product.name, product.category, 10.00))
         
-        answer = client6.send_message( ProtocolPacket(Commands.NOTIFYME_PRODUCT_CHANGE, 0, *product) )
+        answer = client6.send_message( ProtocolPacket(Commands.NOTIFYME_PRODUCT_CHANGE, 0, product.name, product.category, 15) )
         self.assertEqual(answer.opresult, OpResult.SUCCESS)
 
         client2 = Client()
@@ -270,7 +270,7 @@ class ProtocolTests(unittest.TestCase):
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  15.00))
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  21.00))
 
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *product))
+        answer = client1.send_message( ProtocolPacket(Commands.SELL, 0, *product))
         self.assertEqual( answer.opresult, OpResult.SUCCESS)
         self.assertEqual( answer.price, 21.00)
 
@@ -283,6 +283,9 @@ class ProtocolTests(unittest.TestCase):
         client1.close_connection()
         client2.close_connection()
         client3.close_connection()
+        client4.close_connection()
+        client5.close_connection()
+        client6.close_connection()
 
 
 if __name__ == '__main__':

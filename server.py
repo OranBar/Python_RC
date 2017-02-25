@@ -86,7 +86,7 @@ class ServerMinion(object):
         ServerMinion.NEXT_AVAILABLE_PORT += 1
         self.notificationDaemon = NotificationDaemon(notificationDaemonPort, database)
         
-        notificationDaemon_thread = Thread(target =  self.notificationDaemon.start, args = (,))
+        notificationDaemon_thread = Thread(target =  self.notificationDaemon.start, args = (database,))
         notificationDaemon_thread.start()
         
         msg.arg1 = self.notificationDaemon.name
@@ -166,7 +166,7 @@ class ServerMinion(object):
 
             elif(cmd == Commands.NOTIFYME_PRODUCT_CHANGE):
                 # Check valid Product
-                product = (msg.arg1, msg.arg2)
+                product = Product(msg.arg1, msg.arg2)
                 if not database.is_valid_product(product):
                     msg.opresult = database.is_valid_product(product)
                 else:                 
@@ -242,7 +242,7 @@ class NotificationDaemon(object):
         
 
     def register_notification(self, notificationCommand, product = None):
-        assert notificationCommand == Commands.NOTIFYME or notificationCommand == Commands.NOTIFYME_ALL
+        assert notificationCommand == Commands.NOTIFYME_PRODUCT_CHANGE or notificationCommand == Commands.NOTIFYME_NEW_PRODUCTS or notificationCommand == Commands.NOTIFYME_ALL 
 
         if notificationCommand == Commands.NOTIFYME_PRODUCT_CHANGE:
             self.products_on_watch.append(product)

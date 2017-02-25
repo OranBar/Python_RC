@@ -7,6 +7,8 @@ Created on Thu Feb 16 02:50:57 2017
 import socket
 from protocol import *
 import sys
+from threading import Thread
+
 
 class Client(object):
 
@@ -25,7 +27,7 @@ class Client(object):
 
         self.__connect_to_notification_minion()
         
-        notification_listener_thread = Thread(target =  self.__echo_socket_messages, args = (,))
+        notification_listener_thread = Thread(target =  self.__echo_socket_messages, args = ())
         notification_listener_thread.start()
         
         # self.__echo_socket_messages()
@@ -46,7 +48,7 @@ class Client(object):
         while self.connection_open:
             notification_msg = self.notifications_socket.recv(2048)
             last_recv_notification = notification_msg
-            print notification_msg
+            print '\033[94m'+ notification_msg
             sys.stdout.flush()
     
     def send_message(self, msg):
