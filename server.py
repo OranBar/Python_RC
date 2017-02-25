@@ -108,12 +108,15 @@ class ServerMinion(object):
             elif(cmd == Commands.REGISTER):
                 msg.opresult = database.register_new_category(msg.arg2)
                 
-            elif(cmd == Commands.SELL):
+            elif(cmd == Commands.ADD):
                 msg.opresult = database.add_product(Product(msg.arg1, msg.arg2), msg.price)
                 
             elif(cmd == Commands.OFFER):
                 msg.opresult = database.make_offer(Product(msg.arg1, msg.arg2), msg.price)
     
+            elif(cmd == Commands.SELL):
+                msg.opresult, msg.price = database.sell_product(Product(msg.arg1, msg.arg2))
+
             elif(cmd == Commands.NOTIFYME):
                 # Check valid Product
                 # Create NotificationDaemon

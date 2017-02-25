@@ -1,12 +1,18 @@
 from protocol import *
-import pickle
 
+
+class NotificationType(IntEnum):
+    HIGHER_BID = 0
+    NEW_PRODUCT = 1
+    PRODUCT_SOLD = 2
 
 class DatabaseAPI(object):
 
     userToPass = {}
     categories = []
     offers = {}
+
+    daemons_to_notifty = []
 
     # This example shows in what form the database will store items
     # userToPass = { 'user' : 'pass' }
@@ -83,6 +89,10 @@ class DatabaseAPI(object):
         if (product in self.offers):
             return OpResult.PRODUCT_ALREADY_EXISTS
         
+        #TODO: add user 
+        for daemon in self.daemons_to_notifty:
+            daemon.server_data_changed(NotificationType.NEW_PRODUCT, product, startPrice, '')
+
         self.offers[product] = startPrice
         return OpResult.SUCCESS
 
@@ -130,5 +140,28 @@ class DatabaseAPI(object):
             return OpResult.BID_TOO_LOW
         else: 
             self.offers[product] = price
+
+            #TODO: add user 
+            for daemon in self.daemons_to_notifty:
+                daemon.server_data_changed(NotificationType.HIGHER_BID, product, price, '')
+
             return OpResult.SUCCESS
+
+    def sell_product(self, product):
+        if self.product_exists(product) != OpResult.SUCCESS:
+            return (self.product_exists(product), 0)
+        
+        # (Product(ProductName, ProductCategory), price, winner)
+        for daemon in self.daemons_to_notifty:
+            daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, self.offers[product])
+            # daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, *self.offers[product])
+        
+        return (OpResult.SUCCESS, self.offers[product])
+        # return OpResult.SUCCESS, self.offers[product][0]
+
+    def register_for_notifications(self, notificationDaemon):
+        assert notificationDaemon is not None
+
+        self.daemons_to_notifty.append(notificationDaemon)
+        #Print data of product
 

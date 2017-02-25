@@ -15,7 +15,7 @@ class DatabaseAPITests(unittest.TestCase):
         self.assertEqual (db.register_new_user('user', 'pass'), OpResult.SUCCESS)
         self.assertEqual (db.register_new_user('user', 'pass'), OpResult.USER_ALREADY_EXISTS)
 
-     def test_product_exists(self):
+    def test_product_exists(self):
         db = DatabaseAPI()
         product1 = Product('apple', 'pen')
         db.register_new_category('pen')
@@ -121,16 +121,16 @@ class ProtocolTests(unittest.TestCase):
         client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'animal')) 
         client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'petanimals'))
         
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'animal', 10.00))
+        answer = client.send_message( ProtocolPacket(Commands.ADD, 0, 'cat', 'animal', 10.00))
         self.assertEqual (answer.opresult, OpResult.SUCCESS)
 
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'petanimals', 15.00))
+        answer = client.send_message( ProtocolPacket(Commands.ADD, 0, 'cat', 'petanimals', 15.00))
         self.assertEqual (answer.opresult, OpResult.SUCCESS)
 
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'petanimals', 15.00))
+        answer = client.send_message( ProtocolPacket(Commands.ADD, 0, 'cat', 'petanimals', 15.00))
         self.assertEqual (answer.opresult, OpResult.PRODUCT_ALREADY_EXISTS)
 
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'cat', 'blackhole', 15.00))
+        answer = client.send_message( ProtocolPacket(Commands.ADD, 0, 'cat', 'blackhole', 15.00))
         self.assertEqual (answer.opresult, OpResult.CATEGORY_NOT_FOUND)
         
     def test_offers(self):
@@ -144,8 +144,8 @@ class ProtocolTests(unittest.TestCase):
         client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'horses')) 
         client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', 'bottles'))
 
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'stallion', 'horses', 15.00))
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, 'water', 'bottle', 10.00))
+        answer = client.send_message( ProtocolPacket(Commands.ADD, 0, 'stallion', 'horses', 15.00))
+        answer = client.send_message( ProtocolPacket(Commands.ADD, 0, 'water', 'bottle', 10.00))
 
         client2 = Client()
         client2.connect(serverName, serverPort)
@@ -161,8 +161,27 @@ class ProtocolTests(unittest.TestCase):
         answer = client2.send_message( ProtocolPacket(Commands.OFFER, 0, 'stallion', 'horses', 15.01))
         self.assertEqual( answer.opresult,  OpResult.SUCCESS)
 
-    def test_notifications():
+    def test_sell_product(self):
+        db = DatabaseAPI()
+        product = Product('Keyboard', 'Electronics')
+
+        self.assertEqual (db.register_new_category(product.category), OpResult.SUCCESS)
+        self.assertEqual (db.add_product(product, 10.00), OpResult.SUCCESS)
+        self.assertEqual (db.make_offer(product, 15.00), OpResult.SUCCESS)
+        self.assertEqual (db.make_offer(product, 20.00), OpResult.SUCCESS)
+
+        self.assertEqual (db.sell_product(product)[0], OpResult.SUCCESS)
+        self.assertEqual (db.sell_product(product)[1], 20.00)
+
+        fake_product = Product('I Do not exist', 'Unkown')
+
+        self.assertNotEqual (db.sell_product(fake_product)[0], OpResult.SUCCESS)
+        self.assertEqual (db.sell_product(fake_product)[1], 0)
+
+
+    def test_notifications(self):
         pass
+
         
 
 

@@ -9,18 +9,13 @@ Product = collections.namedtuple('Product', 'name category')
 class Commands(IntEnum):
     LOGIN = 0
     REGISTER = 1
-    SELL = 2
+    ADD = 2
     OFFER = 3
-    NOTIFYME_PRODUCT_CHANGE = 4
-    NOTIFYME_NEW_PRODUCTS = 5
-    NOTIFYME_ALL = 6
-    CLOSE_CONNECTION = 7
-
-class NotificationType(IntEnum):
-    HIGHER_BID = 0
-    NEW_PRODUCT = 1
-    PRODUCT_SOLD = 2
-
+    SELL = 4
+    NOTIFYME_PRODUCT_CHANGE = 5
+    NOTIFYME_NEW_PRODUCTS = 6
+    NOTIFYME_ALL = 7
+    CLOSE_CONNECTION = 8
     
 
 @unique
