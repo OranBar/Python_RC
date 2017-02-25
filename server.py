@@ -12,6 +12,7 @@ import time
 from protocol import *
 from copy import *
 from database import *
+import sys
 
 class ConnectionFSM(Enum):
     LOGIN = 1
@@ -51,7 +52,7 @@ class Server(object):
     def process_connection(self, conn):
         msgHandler = ServerMinion()
         print 'Starting Minion Thread'
-        serverMinionThread = Thread(target =  msgHandler.serve_client, args = (self.database, conn, ConnectionFSM.LOGIN))
+        serverMinionThread = Thread(target =  msgHandler.serve_client, args = (self.database, conn, ConnectionFSM.LOGIN, ''))
         serverMinionThread.start()
     
 
@@ -61,16 +62,17 @@ class MockServer(Server):
         Server.__init__(self, serverName, serverPort)
         self.database.register_new_user('user', 'pass')       
         self.database.register_new_user('user2', 'pass')
+        self.database.register_new_user('user3', 'pass')
 
 class ServerMinion(object):
 
     notificationDaemonPort = 0
-
+    
     def __init__(self):
         # TODO: get incremental port
         pass
 
-    def serve_client(self, database, connection, state):
+    def serve_client(self, database, connection, state, client_username):
         print '\nServe_Client: State is ' + state.__str__()
 
         #Add timeout
@@ -83,12 +85,13 @@ class ServerMinion(object):
         
         msg = ProtocolPacket.unpack_data(packed_msg)
         
+        sys.stdout.flush()
         print 'Message Received: ' + msg.__str__()
         
-        self.__handle_request(database, connection, msg, state)
+        self.__handle_request(database, connection, msg, state, client_username)
 
      
-    def __handle_request(self, database, connection, msg, state):
+    def __handle_request(self, database, connection, msg, state, client_username):
         #TODO Implement me
         cmd = msg.cmd
 
@@ -112,7 +115,7 @@ class ServerMinion(object):
                 msg.opresult = database.add_product(Product(msg.arg1, msg.arg2), msg.price)
                 
             elif(cmd == Commands.OFFER):
-                msg.opresult = database.make_offer(Product(msg.arg1, msg.arg2), msg.price)
+                msg.opresult = database.make_offer(Product(msg.arg1, msg.arg2), msg.price, client_username)
     
             elif(cmd == Commands.SELL):
                 msg.opresult, msg.price = database.sell_product(Product(msg.arg1, msg.arg2))
@@ -125,7 +128,7 @@ class ServerMinion(object):
                 
             print 'Result: ' + OpResult(msg.opresult).__str__()
             connection.send ( msg.pack_data() )
-            self.serve_client(database,connection, state)
+            self.serve_client(database,connection, state, client_username)
                
 
 
@@ -138,7 +141,7 @@ class ServerMinion(object):
             answer.opresult = OpResult.USER_NOT_AUTHENTICATED
             print 'Login Result: ' + OpResult.USER_NOT_AUTHENTICATED.__str__()
             connection.send( answer.pack_data() )
-            self.serve_client(database, connection, ConnectionFSM.LOGIN)
+            self.serve_client(database, connection, ConnectionFSM.LOGIN, '')
         else:
             username, password = msg.arg1, msg.arg2
             print 'Username is {0}, password is {1}'.format(username, password)
@@ -149,9 +152,10 @@ class ServerMinion(object):
             connection.send( answer.pack_data() ) 
             
             if loginResult == OpResult.SUCCESS:
-                self.serve_client(database, connection, ConnectionFSM.AUTHENTICATED)
+                print 'Login successful. Authenticated as '+username
+                self.serve_client(database, connection, ConnectionFSM.AUTHENTICATED, username)
             else:
-                self.serve_client(database, connection, ConnectionFSM.LOGIN)
+                self.serve_client(database, connection, ConnectionFSM.LOGIN, '')
         
 
 

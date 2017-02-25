@@ -93,7 +93,7 @@ class DatabaseAPI(object):
         for daemon in self.daemons_to_notifty:
             daemon.server_data_changed(NotificationType.NEW_PRODUCT, product, startPrice, '')
 
-        self.offers[product] = startPrice
+        self.offers[product] = (startPrice, '-')
         return OpResult.SUCCESS
 
     def product_exists(self, product):
@@ -132,14 +132,14 @@ class DatabaseAPI(object):
     def list_categories(self):
         return (OpResult.SUCCESS, self.categories)
 
-    def make_offer(self, product, price):
+    def make_offer(self, product, price, bidder):
         if self.product_exists(product) != OpResult.SUCCESS:
             return self.product_exists(product)
         
-        if self.offers[product] >= price:
+        if self.offers[product][0] >= price:
             return OpResult.BID_TOO_LOW
         else: 
-            self.offers[product] = price
+            self.offers[product] = (price, bidder)
 
             #TODO: add user 
             for daemon in self.daemons_to_notifty:
@@ -153,11 +153,11 @@ class DatabaseAPI(object):
         
         # (Product(ProductName, ProductCategory), price, winner)
         for daemon in self.daemons_to_notifty:
-            daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, self.offers[product])
-            # daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, *self.offers[product])
+            # daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, self.offers[product])
+            daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, *self.offers[product])
         
-        return (OpResult.SUCCESS, self.offers[product])
-        # return OpResult.SUCCESS, self.offers[product][0]
+        # return (OpResult.SUCCESS, self.offers[product])
+        return OpResult.SUCCESS, self.offers[product][0]
 
     def register_for_notifications(self, notificationDaemon):
         assert notificationDaemon is not None

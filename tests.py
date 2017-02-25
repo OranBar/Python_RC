@@ -57,6 +57,23 @@ class DatabaseAPITests(unittest.TestCase):
         self.assertEqual (db.list_categories()[1][0], 'animal' )
         self.assertEqual (db.list_categories()[1][1], 'petanimals' )
 
+    def test_sell_product(self):
+        db = DatabaseAPI()
+        product = Product('Keyboard', 'Electronics')
+
+        self.assertEqual (db.register_new_category(product.category), OpResult.SUCCESS)
+        self.assertEqual (db.add_product(product, 10.00), OpResult.SUCCESS)
+        self.assertEqual (db.make_offer(product, 15.00, 'Chuck Norris'), OpResult.SUCCESS)
+        self.assertEqual (db.make_offer(product, 20.00, 'Chuck Norris'), OpResult.SUCCESS)
+
+        self.assertEqual (db.sell_product(product)[0], OpResult.SUCCESS)
+        self.assertEqual (db.sell_product(product)[1], 20.00)
+
+        fake_product = Product('I Do not exist', 'Unkown')
+
+        self.assertNotEqual (db.sell_product(fake_product)[0], OpResult.SUCCESS)
+        self.assertEqual (db.sell_product(fake_product)[1], 0)
+
 class ProtocolTests(unittest.TestCase):
 
     def test_message_packing_and_unpacking(self):
@@ -132,6 +149,8 @@ class ProtocolTests(unittest.TestCase):
 
         answer = client.send_message( ProtocolPacket(Commands.ADD, 0, 'cat', 'blackhole', 15.00))
         self.assertEqual (answer.opresult, OpResult.CATEGORY_NOT_FOUND)
+
+        client.close_connection()
         
     def test_offers(self):
 
@@ -161,25 +180,50 @@ class ProtocolTests(unittest.TestCase):
         answer = client2.send_message( ProtocolPacket(Commands.OFFER, 0, 'stallion', 'horses', 15.01))
         self.assertEqual( answer.opresult,  OpResult.SUCCESS)
 
+        client.close_connection()
+        client2.close_connection()
+
     def test_sell_product(self):
-        db = DatabaseAPI()
+        serverName, serverPort = 'localhost', 12000
+        client = Client()
+        client.connect(serverName, serverPort)
+
+        client.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user', 'pass'))
+        
         product = Product('Keyboard', 'Electronics')
+        
+        client.send_message( ProtocolPacket(Commands.REGISTER, 0, '', product.category)) 
+        client.send_message( ProtocolPacket(Commands.ADD, 0, product.name, product.category, 10.00))
 
-        self.assertEqual (db.register_new_category(product.category), OpResult.SUCCESS)
-        self.assertEqual (db.add_product(product, 10.00), OpResult.SUCCESS)
-        self.assertEqual (db.make_offer(product, 15.00), OpResult.SUCCESS)
-        self.assertEqual (db.make_offer(product, 20.00), OpResult.SUCCESS)
+        client2 = Client()
+        client2.connect(serverName, serverPort)
 
-        self.assertEqual (db.sell_product(product)[0], OpResult.SUCCESS)
-        self.assertEqual (db.sell_product(product)[1], 20.00)
+        client2.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user2', 'pass'))
+        client2.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category, 20.00))
+       
+        client3 = Client()
+        client3.connect(serverName, serverPort)
+
+        client3.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user3', 'pass'))
+        client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  15.00))
+        client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  21.00))
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *product))
+        self.assertEqual( answer.opresult, OpResult.SUCCESS)
+        self.assertEqual( answer.price, 21.00)
 
         fake_product = Product('I Do not exist', 'Unkown')
 
-        self.assertNotEqual (db.sell_product(fake_product)[0], OpResult.SUCCESS)
-        self.assertEqual (db.sell_product(fake_product)[1], 0)
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *fake_product))
+        self.assertNotEqual( answer.opresult, OpResult.SUCCESS)
+        self.assertEqual( answer.price, 0)
 
+        client.close_connection()
+        client2.close_connection()
+        client3.close_connection()
 
     def test_notifications(self):
+        assert False
         pass
 
         
