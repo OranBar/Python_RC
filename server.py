@@ -229,6 +229,7 @@ class NotificationDaemon(object):
         self.name = 'localhost'
         self.port = port
         self.database = database
+        self.products_on_watch = []
         
     def start(self, database):
         print 'NotificationDaemon: Name = {0}, Port = {1}'.format(self.name, self.port)
@@ -271,10 +272,14 @@ class NotificationDaemon(object):
         if notificationType == NotificationType.HIGHER_BID:
             if (product in self.products_on_watch) or self.notify_all:
                 self.send_message('\033[94m HIGHER BID: Product: '+product.__str__()+' - Bid: '+price.__str__()+' - Bidder: '+user)
-            
+        
                 
         
 
     def send_message(self, msg):
-        self.connection.send(msg)
+        try:
+            self.connection.send(msg)
+        except socket.error:
+            #Connection was closed
+            self.connection.close()
         

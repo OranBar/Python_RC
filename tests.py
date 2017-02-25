@@ -254,6 +254,9 @@ class ProtocolTests(unittest.TestCase):
         
         client1.send_message( ProtocolPacket(Commands.REGISTER, 0, '', product.category)) 
         client1.send_message( ProtocolPacket(Commands.ADD, 0, product.name, product.category, 10.00))
+        self.assertEqual( client4.last_recv_notification, "\033[94m NEW PRODUCT: Product(name='Keyboard', category='Electronics') - Start Price: 10.0 - Seller: user")
+        self.assertEqual( client5.last_recv_notification, "\033[94m NEW PRODUCT: Product(name='Keyboard', category='Electronics') - Start Price: 10.0 - Seller: user")
+        #self.assertEqual( client6.last_recv_notification, "\033[94m NEW PRODUCT: Product(name='Keyboard', category='Electronics') - Start Price: 10.0 - Seller: user")
         
         answer = client6.send_message( ProtocolPacket(Commands.NOTIFYME_PRODUCT_CHANGE, 0, product.name, product.category, 15) )
         self.assertEqual(answer.opresult, OpResult.SUCCESS)
@@ -264,9 +267,12 @@ class ProtocolTests(unittest.TestCase):
         client2.send_message( ProtocolPacket(Commands.LOGIN, 0, 'user2', 'pass'))
         client2.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category, 20.00))
         print 'TIMECHECK '+time.time().__str__()
-        time.sleep(0.5)
+        self.assertEqual( client4.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
+        self.assertNotEqual( client5.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
         self.assertEqual( client6.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
-       
+
+
+
         client3 = Client()
         client3.connect(serverName, serverPort)
 

@@ -46,13 +46,19 @@ class Client(object):
     def __echo_socket_messages(self, notifications_socket):
         assert (notifications_socket != None)
         
-        while self.connection_open:
-            self.last_recv_notification = notifications_socket.recv(2048)
-            if(self.last_recv_notification == ''):
-                print 'Server closed connection: Closing Notification Connection'
+        while True:
+            try:
+                self.last_recv_notification = notifications_socket.recv(2048)
+                if self.last_recv_notification == '':
+                    print 'Server closed connection. Closing socket connection'
+                    notifications_socket.close()
+                    
+            except socket.error as error:
+                print 'Server is down. Closing socket connection'
+                sys.stdout.flush()
                 notifications_socket.close()
-                return
-            
+                break
+
             print time.time().__str__()+' MsgReceived: '+self.last_recv_notification
             sys.stdout.flush()
     
@@ -73,12 +79,13 @@ class Client(object):
         closeMsg = ProtocolPacket(Commands.CLOSE_CONNECTION, 0, '', '')
         answer = self.send_message( closeMsg )
         if answer.opresult == OpResult.SUCCESS:
-            # print "Client: Connection closed"
+            print "Client: Connection with client closed"
             self.clientSocket.close()
         else:
             print 'Error closing the connection'
 
         #Close notification socket
+        print "Client: Connection with notification daemon closed"
         self.notifications_socket.close()
 
         
