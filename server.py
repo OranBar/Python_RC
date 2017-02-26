@@ -16,8 +16,8 @@ import sys
 import itertools
 
 class ConnectionFSM(Enum):
-    LOGIN = 1
-    AUTHENTICATED = 2
+    AUTHENTICATING = 1
+    LOGGED_IN = 2
 
 
 class Server(object):
@@ -53,7 +53,7 @@ class Server(object):
     def process_connection(self, conn):
         msgHandler = ServerMinion()
         print 'Starting Minion Thread'
-        serverMinionThread = Thread(target =  msgHandler.connect_to_minion, args = (self.database, conn, ConnectionFSM.LOGIN, ''))
+        serverMinionThread = Thread(target =  msgHandler.connect_to_minion, args = (self.database, conn, ConnectionFSM.AUTHENTICATING, ''))
         serverMinionThread.start()
     
 
@@ -124,11 +124,11 @@ class ServerMinion(object):
             connection.close()
             return
 
-        if(state is ConnectionFSM.LOGIN):
+        if(state is ConnectionFSM.AUTHENTICATING):
             self.__handle_login(database, connection, msg)
             return
 
-        if(state is ConnectionFSM.AUTHENTICATED):
+        if(state is ConnectionFSM.LOGGED_IN):
             if(cmd == Commands.LOGIN):
                 msg.opresult = OpResult.ALREADY_AUTHENTICATED
                 
@@ -175,7 +175,7 @@ class ServerMinion(object):
             answer.opresult = OpResult.USER_NOT_AUTHENTICATED
             print 'Login Result: ' + OpResult.USER_NOT_AUTHENTICATED.__str__()
             connection.send( answer.pack_data() )
-            self.serve_client(database, connection, ConnectionFSM.LOGIN, '')
+            self.serve_client(database, connection, ConnectionFSM.AUTHENTICATING, '')
         else:
             username, password = msg.arg1, msg.arg2
             print 'Username is {0}, password is {1}'.format(username, password)
@@ -187,9 +187,9 @@ class ServerMinion(object):
             
             if loginResult == OpResult.SUCCESS:
                 print 'Login successful. Authenticated as '+username
-                self.serve_client(database, connection, ConnectionFSM.AUTHENTICATED, username)
+                self.serve_client(database, connection, ConnectionFSM.LOGGED_IN, username)
             else:
-                self.serve_client(database, connection, ConnectionFSM.LOGIN, '')
+                self.serve_client(database, connection, ConnectionFSM.AUTHENTICATING, '')
         
 
 
