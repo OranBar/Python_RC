@@ -23,7 +23,7 @@ class ConnectionFSM(Enum):
 class Server(object):
 
     serverName = 'localhost'
-    serverPort = 12000
+    serverPort = 49152
     serverSocket = 0
 
     stop = 0
@@ -71,7 +71,7 @@ class MockServer(Server):
 
 class ServerMinion(object):
     #Static shared variable 
-    NEXT_AVAILABLE_PORT = 49152
+    NEXT_AVAILABLE_PORT = 49153
 
     notificationDaemon = None
 

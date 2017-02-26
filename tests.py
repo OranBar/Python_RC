@@ -7,6 +7,7 @@ import unittest
 import time
 
 class DatabaseAPITests(unittest.TestCase):
+
     def test_register_new_user(self):
         db = DatabaseAPI()
 
@@ -74,7 +75,6 @@ class DatabaseAPITests(unittest.TestCase):
         answer = db.sell_product(product, 'user')
         self.assertEqual (answer[0], OpResult.PRODUCT_NOT_FOUND)
         
-
         fake_product = Product('I Do not exist', 'Unkown')
 
         self.assertNotEqual (db.sell_product(fake_product, 'Chuck Norris')[0], OpResult.SUCCESS)
@@ -92,9 +92,10 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(unpacked_data.opresult, OpResult.SUCCESS)
         self.assertEqual(unpacked_data.arg1, 'test')
         self.assertEqual(unpacked_data.arg2, 'testa')
+
     
     def test_check_credentials(self):
-        serverName, serverPort = 'localhost', 12000
+        serverName, serverPort = 'localhost', 49152
         client = Client()
         client.connect(serverName, serverPort)
 
@@ -117,7 +118,7 @@ class ProtocolTests(unittest.TestCase):
      
 
     def test_register_new_categories(self):
-        serverName, serverPort = 'localhost', 12000
+        serverName, serverPort = 'localhost', 49152
         client = Client()
         client.connect(serverName, serverPort)
         
@@ -134,8 +135,9 @@ class ProtocolTests(unittest.TestCase):
 
         client.close_connection()
 
+
     def test_add_product(self):
-        serverName, serverPort = 'localhost', 12000
+        serverName, serverPort = 'localhost', 49152
         client = Client()
         client.connect(serverName, serverPort)
         
@@ -158,9 +160,10 @@ class ProtocolTests(unittest.TestCase):
 
         client.close_connection()
         
+
     def test_offers(self):
 
-        serverName, serverPort = 'localhost', 12000
+        serverName, serverPort = 'localhost', 49152
         client = Client()
         client.connect(serverName, serverPort)
         
@@ -190,7 +193,7 @@ class ProtocolTests(unittest.TestCase):
         client2.close_connection()
 
     def test_sell_product(self):
-        serverName, serverPort = 'localhost', 12000
+        serverName, serverPort = 'localhost', 49152
         client = Client()
         client.connect(serverName, serverPort)
 
@@ -234,7 +237,7 @@ class ProtocolTests(unittest.TestCase):
         client3.close_connection()
 
     def test_notifications(self):
-        serverName, serverPort = 'localhost', 12000
+        serverName, serverPort = 'localhost', 49152
         
         ###################### Notification Listeners 
         client4 = Client()
@@ -282,7 +285,6 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual( client6.last_recv_notification, '\x1b[94m HIGHER BID: Product: Product(name=\'Keyboard\', category=\'Electronics\') - Bid: 20.0 - Bidder: user2')
 
 
-
         client3 = Client()
         client3.connect(serverName, serverPort)
 
@@ -311,7 +313,6 @@ class ProtocolTests(unittest.TestCase):
         self.assertNotEqual( client4.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='I Do not exist', category='Unkown') - Final Price: 21.0 - Sold To: user3")
         self.assertNotEqual( client5.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='I Do not exist', category='Unkown') - Final Price: 21.0 - Sold To: user3")
         self.assertNotEqual( client6.last_recv_notification, "\x1b[94m PRODUCT SOLD: Product(name='I Do not exist', category='Unkown') - Final Price: 21.0 - Sold To: user3")
-
 
         client1.close_connection()
         client2.close_connection()
