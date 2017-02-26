@@ -323,7 +323,5 @@ class ProtocolTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    # suite = unittest.TestLoader().loadTestsFromTestCase(Tests)
-    # unittest.TextTestRunner(verbosity=2).run(suite)
 
 

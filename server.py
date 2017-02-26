@@ -99,25 +99,6 @@ class ServerMinion(object):
         self.serve_client(database, connection, state, client_username)
     
     def serve_client(self, database, connection, state, client_username):
-        # print '\nServe_Client: State is ' + state.__str__()
-        
-        # packed_msg = connection.recv(2048)
-        # assert packed_msg.cmd == Commands.CONNECT
-
-        
-        # notificationDaemonPort = ServerMinion.next_available_port
-        # ServerMinion.next_available_port += 1
-        # self.notificationDaemon = NotificationDaemon()
-        
-        # notificationDaemon_thread = Thread(target =  self.notificationDaemon.start, args = (database, notificationDaemonPort))
-        # notificationDaemon_thread.start()
-        
-        # msg.arg1 = self.notificationDaemon.name
-        # msg.arg2 = self.notificationDaemon.port
-        # msg.opresult = OpResult.SUCCESS
-        # connection.send ( msg.pack_data() )
-        
-        #Add timeout
         packed_msg = connection.recv(2048)
         
         if(packed_msg == ''):
@@ -134,7 +115,6 @@ class ServerMinion(object):
 
      
     def __handle_request(self, database, connection, msg, state, client_username):
-        #TODO Implement me
         cmd = msg.cmd
 
         if( cmd == Commands.CLOSE_CONNECTION):
@@ -166,7 +146,6 @@ class ServerMinion(object):
                 msg.opresult, msg.price = database.sell_product(product, client_username)
 
             elif(cmd == Commands.NOTIFYME_PRODUCT_CHANGE):
-                # Check valid Product
                 product = Product(msg.arg1, msg.arg2)
                 if not database.is_valid_product(product):
                     msg.opresult = database.is_valid_product(product)
@@ -192,7 +171,6 @@ class ServerMinion(object):
         answer = msg
         
         if(msg.cmd != Commands.LOGIN):
-            #Error: bad request: User needs to login before doing any other operation
             print 'Error: Need to login first'
             answer.opresult = OpResult.USER_NOT_AUTHENTICATED
             print 'Login Result: ' + OpResult.USER_NOT_AUTHENTICATED.__str__()

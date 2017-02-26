@@ -30,8 +30,6 @@ class Client(object):
         
         notification_listener_thread = Thread(target =  self.__echo_socket_messages, args = (self.notifications_socket,))
         notification_listener_thread.start()
-        
-        # self.__echo_socket_messages()
 
     def __connect_to_notification_minion(self):
         answer = self.send_message( ProtocolPacket(Commands.CONNECT, 0, '', '') )
@@ -58,7 +56,8 @@ class Client(object):
                 sys.stdout.flush()
                 notifications_socket.close()
                 break
-
+            
+            self.last_recv_notification
             print time.time().__str__()+' MsgReceived: '+self.last_recv_notification
             sys.stdout.flush()
     

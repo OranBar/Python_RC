@@ -87,7 +87,6 @@ class DatabaseAPI(object):
         else:
             return OpResult.CATEGORY_ALREADY_EXISTS
 
-    # Add minimum price
     def add_product(self, product, startPrice, user):
         if not self.is_valid_product_name(product.name):
             return OpResult.INVALID_PRODUCT_NAME
@@ -96,11 +95,10 @@ class DatabaseAPI(object):
 
         if product.category not in self.categories:
             return OpResult.CATEGORY_NOT_FOUND
-        # if (product in self.offers.keys):
+
         if (product in self.offers):
             return OpResult.PRODUCT_ALREADY_EXISTS
         
-        #TODO: add user 
         for daemon in self.daemons_to_notifty:
             daemon.server_data_changed(NotificationType.NEW_PRODUCT, product, startPrice, user)
 
@@ -153,7 +151,6 @@ class DatabaseAPI(object):
         else: 
             self.offers[product] = (price, bidder)
 
-            #TODO: add user 
             for daemon in self.daemons_to_notifty:
                 daemon.server_data_changed(NotificationType.HIGHER_BID, product, price, bidder)
 
@@ -166,11 +163,9 @@ class DatabaseAPI(object):
         if self.product_owner[product] != user:
             return (OpResult.NOT_PRODUCT_OWNER, 0)
 
-        # (Product(ProductName, ProductCategory), price, winner)
         for daemon in self.daemons_to_notifty:
             daemon.server_data_changed(NotificationType.PRODUCT_SOLD, product, *self.offers[product])
         
-        # return (OpResult.SUCCESS, self.offers[product])
         final_price = self.offers[product][0]
         del self.offers[product] 
         del self.product_owner[product]
@@ -181,5 +176,5 @@ class DatabaseAPI(object):
 
         if notificationDaemon not in self.daemons_to_notifty:
             self.daemons_to_notifty.append(notificationDaemon)
-        #Print data of product
+    
 
