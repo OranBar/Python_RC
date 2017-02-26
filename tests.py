@@ -217,6 +217,12 @@ class ProtocolTests(unittest.TestCase):
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  15.00))
         client3.send_message( ProtocolPacket(Commands.OFFER, 0, product.name, product.category,  21.00))
 
+        fake_product = Product('I Do not exist', 'Unkown')
+
+        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *fake_product))
+        self.assertEqual( answer.opresult, OpResult.PRODUCT_NOT_FOUND)
+         # self.assertNotEqual( answer.opresult, OpResult.SUCCESS)
+
         answer = client2.send_message( ProtocolPacket(Commands.SELL, 0, *product))
         self.assertEqual( answer.opresult, OpResult.NOT_PRODUCT_OWNER)
    
@@ -227,11 +233,7 @@ class ProtocolTests(unittest.TestCase):
         answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *product))
         self.assertEqual( answer.opresult, OpResult.PRODUCT_NOT_FOUND)
        
-        fake_product = Product('I Do not exist', 'Unkown')
-
-        answer = client.send_message( ProtocolPacket(Commands.SELL, 0, *fake_product))
-        self.assertNotEqual( answer.opresult, OpResult.SUCCESS)
-             
+       
         client.close_connection()
         client2.close_connection()
         client3.close_connection()
